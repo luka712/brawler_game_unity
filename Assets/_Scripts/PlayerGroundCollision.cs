@@ -21,6 +21,10 @@ public class PlayerGroundCollision : MonoBehaviour {
             {
                 movePlayer.JumpState = JumpState.None;
             }
+            else if(collision.contacts[0].point.y < movePlayer.transform.position.y)
+            {
+                movePlayer.JumpState = JumpState.None;
+            }
         }
     }
 

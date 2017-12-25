@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class DividedSprite
 {
+    [SerializeField]
+    private string layer = "GroundCollisions";
+
+    [SerializeField]
+    private string sortingLayer = "Foreground";
+
     private GameObject _this;
     private GameObject parent;
     private SpriteRenderer rend;
@@ -30,7 +36,7 @@ public class DividedSprite
         coll = _this.AddComponent<BoxCollider2D>();
         rigidBody = _this.AddComponent<Rigidbody2D>();
         rigidBody.gravityScale = Gravity;
-       // rigidBody.gameObject.layer = LayerMask.NameToLayer(collisionLayer);
+        rigidBody.gameObject.layer = LayerMask.NameToLayer(layer);
     }
 
     // Update is called once per frame
@@ -39,7 +45,7 @@ public class DividedSprite
         if (isActive && lifeTime > 0)
         {
             // multiplication is faster then division. So 0.001f.
-            lifeTime -= Time.deltaTime * FadeOutSpeed * 0.001f;
+            lifeTime -= Time.deltaTime * FadeOutSpeed * 0.01f;
             rend.color = rend.color.SetAlpha(lifeTime);
             if (lifeTime <= 0)
             {
@@ -56,6 +62,7 @@ public class DividedSprite
         rend.size = parentRenderer.size;
         rend.sprite = Sprite.Create(parentRenderer.sprite.texture, sourceRect, Vector2.zero, PixelsPerUnit);
         rend.color = parentRenderer.color;
+        rend.sortingLayerName = sortingLayer;
 
         var parentPosition = parent.transform.position;
         _this.transform.position =
@@ -63,7 +70,7 @@ public class DividedSprite
 
         // Set collision box.
         coll.offset = new Vector2(sourceRect.width * .5f / PixelsPerUnit, sourceRect.height * .5f / PixelsPerUnit);
-        coll.size = new Vector2(sourceRect.width / PixelsPerUnit, sourceRect.height / PixelsPerUnit);
+        coll.size = new Vector2(sourceRect.width / PixelsPerUnit , sourceRect.height / PixelsPerUnit);
     }
 
     public virtual void AddForce(Vector2 direction, float minForce, float maxForce)
