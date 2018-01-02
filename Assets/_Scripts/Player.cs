@@ -40,4 +40,9 @@ public class Player : MonoBehaviour
     {
         Health += health; 
     }
+
+    public void SetPosition(Vector3 position)
+    {
+        this.gameObject.transform.position = position;
+    }
 }
