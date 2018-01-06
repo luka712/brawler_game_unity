@@ -31,13 +31,16 @@ public class Collisions : MonoBehaviour {
         {
             var playerDirection = player.GetComponent<Rigidbody2D>().velocity;
             player.AddDamage(25, playerDirection.normalized * ForceFromTrapBoxSpike);
-
+           
             var contactPoint = collision.contacts[0].point;
             var trapPosition = collision.gameObject.transform.position.ToVector2();
             var direction = contactPoint - trapPosition;
             direction.Normalize();
 
-            spriteDivider.Divide(direction);
+            if (player.Health <= 0f)
+            {
+                spriteDivider.Divide(direction);
+            }
         }
     }
 }

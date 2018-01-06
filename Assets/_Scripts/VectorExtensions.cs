@@ -17,5 +17,10 @@ public static class VectorExtensions
     {
         return new Vector3(x, vector.y, vector.z);
     }
+
+    public static Vector3 ChangeComponentY(this Vector3 vector, float y)
+    {
+        return new Vector3(vector.x, y, vector.z);
+    }
 }
 
