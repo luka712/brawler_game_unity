@@ -16,10 +16,7 @@ public class ZoomInOut : MonoBehaviour
     private float maxSize = 12.0f; 
 
     private float initalSize;
-    private Camera camera;
-
-    private float previousFrameMaxX = 0f;
-    private float previousFrameMaxY = 0f;
+    private new Camera camera;
 
 
     private void Start()
@@ -67,10 +64,6 @@ public class ZoomInOut : MonoBehaviour
         {
             camera.orthographicSize = maxSize; 
         } 
-
-        // previous frame values
-        previousFrameMaxX = maxX;
-        previousFrameMaxY = maxY;
     }
 
 }

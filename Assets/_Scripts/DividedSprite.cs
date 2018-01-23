@@ -5,7 +5,7 @@ using UnityEngine;
 public class DividedSprite
 {
     [SerializeField]
-    private string layer = "GroundCollisions";
+    private string layer = "DividedSprites";
 
     [SerializeField]
     private string sortingLayer = "Foreground";
@@ -60,7 +60,18 @@ public class DividedSprite
         isActive = true;
         lifeTime = 1f;
         rend.size = parentRenderer.size;
+
+        // TODO: this part was throwing exceptions, check if this handling is ok, test game sprite divider
+        if (sourceRect.x + sourceRect.width > parentRenderer.sprite.texture.width)
+        {
+            sourceRect.width = parentRenderer.sprite.texture.width - sourceRect.x;
+        }
+        if (sourceRect.y + sourceRect.height > parentRenderer.sprite.texture.height)
+        {
+            sourceRect.height = parentRenderer.sprite.texture.height - sourceRect.y;
+        }
         rend.sprite = Sprite.Create(parentRenderer.sprite.texture, sourceRect, Vector2.zero, PixelsPerUnit);
+
         rend.color = parentRenderer.color;
         rend.sortingLayerName = sortingLayer;
 
@@ -70,7 +81,7 @@ public class DividedSprite
 
         // Set collision box.
         coll.offset = new Vector2(sourceRect.width * .5f / PixelsPerUnit, sourceRect.height * .5f / PixelsPerUnit);
-        coll.size = new Vector2(sourceRect.width / PixelsPerUnit , sourceRect.height / PixelsPerUnit);
+        coll.size = new Vector2(sourceRect.width / PixelsPerUnit, sourceRect.height / PixelsPerUnit);
     }
 
     public virtual void AddForce(Vector2 direction, float minForce, float maxForce)

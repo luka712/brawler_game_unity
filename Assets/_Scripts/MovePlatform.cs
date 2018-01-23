@@ -18,8 +18,10 @@ public class MovePlatform : MonoBehaviour
         if (wayPoints.Count >= 1)
         {
             currentStartPoint = wayPoints[index];
-            currentEndPoint = wayPoints[++index];
-
+            if (wayPoints.Count > 1)
+            {
+                currentEndPoint = wayPoints[++index];
+            }
             this.transform.position = currentStartPoint.ToVector3(this.transform.position.z);
         }
         else
@@ -43,6 +45,6 @@ public class MovePlatform : MonoBehaviour
 
         var direction = (currentEndPoint - currentStartPoint).normalized;
 
-        this.transform.Translate((direction * moveSpeed * Time.deltaTime).ToVector3(0)); 
+        this.transform.Translate((direction * moveSpeed * Time.deltaTime).ToVector3(0));
     }
 }

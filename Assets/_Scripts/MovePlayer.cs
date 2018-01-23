@@ -41,7 +41,9 @@ public class MovePlayer : MonoBehaviour
     private void LeftRightMovement()
     {
         var direction = Input.GetAxis("Horizontal");
+        var movingFast = Input.GetButton("Run");
         animator.SetBool("moving", direction != 0f);
+        animator.SetBool("fast_moving", movingFast);
         if (direction > 0f)
         {
             direction = 1f;
@@ -54,6 +56,10 @@ public class MovePlayer : MonoBehaviour
         }
 
         var velocity = direction * movementSpeed * Time.deltaTime;
+        if (movingFast)
+        {
+            velocity *= 2;
+        }
         if (velocity != 0f)
         {
             transform.Translate(new Vector3(velocity, 0, 0));
