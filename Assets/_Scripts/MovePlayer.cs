@@ -4,12 +4,15 @@ public enum JumpState { None, Jumping, DoubleJump }
 
 public class MovePlayer : MonoBehaviour
 {
-    [SerializeField]
-    private float movementSpeed = 5f;
-    [SerializeField]
-    private float jumpStrength = 500f;
-    [SerializeField]
-    private float doubleJumpStrength = 250f;
+    public float movementSpeed = 5f;
+    public float jumpStrength = 15f;
+    public float doubleJumpStrength = 12f;
+
+    // action
+    public string jumpButton = "Jump_P1";
+    public string runButton = "Run_P1";
+    public string horizontalAxis = "Horizontal_P1";
+
 
     private new Transform transform;
     private Rigidbody2D rigidBody;
@@ -40,8 +43,8 @@ public class MovePlayer : MonoBehaviour
 
     private void LeftRightMovement()
     {
-        var direction = Input.GetAxis("Horizontal");
-        var movingFast = Input.GetButton("Run");
+        var direction = Input.GetAxis(horizontalAxis);
+        var movingFast = Input.GetButton(runButton);
         animator.SetBool("moving", direction != 0f);
         animator.SetBool("fast_moving", movingFast);
         if (direction > 0f)
@@ -68,19 +71,19 @@ public class MovePlayer : MonoBehaviour
 
     private void Jump()
     {
-        if (Input.GetButtonDown("Jump") && JumpState != JumpState.DoubleJump)
+        if (Input.GetButtonDown(jumpButton) && JumpState != JumpState.DoubleJump)
         {
             if (JumpState == JumpState.None)
             {
                 JumpState = JumpState.Jumping;
                 rigidBody.velocity = new Vector2(rigidBody.velocity.x, 0f);
-                rigidBody.AddForce(Vector2.up * jumpStrength, ForceMode2D.Force);
+                rigidBody.AddForce(Vector2.up * jumpStrength, ForceMode2D.Impulse);
             }
             else if (JumpState == JumpState.Jumping)
             {
                 JumpState = JumpState.DoubleJump;
                 rigidBody.velocity = new Vector2(rigidBody.velocity.x, 0f);
-                rigidBody.AddForce(Vector2.up * doubleJumpStrength, ForceMode2D.Force);
+                rigidBody.AddForce(Vector2.up * doubleJumpStrength, ForceMode2D.Impulse);
             }
         }
     }

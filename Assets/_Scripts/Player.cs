@@ -17,6 +17,18 @@ public class Player : MonoBehaviour
     private float spawnAnimationSpeed = 1f;
     private bool gameStart = true;
 
+    // bullets 
+    [SerializeField]
+    private Bullet bulletInstance;
+    private List<Bullet> bullets = new List<Bullet>();
+
+    // team
+    [SerializeField]
+    private int group = 1;
+
+    // buttons
+    public string fireButton = "Fire_P1";
+
     // events
     public Action OnDeath;
 
@@ -52,6 +64,11 @@ public class Player : MonoBehaviour
             }
         }
     }
+    
+    /// <summary>
+    /// Gets player team.
+    /// </summary>
+    public int Group { get { return group; } }
 
     private void Update()
     {
@@ -76,6 +93,25 @@ public class Player : MonoBehaviour
                 }
             }
             spriteRenderer.color = spriteRenderer.color.SetAlpha(alpha);
+        }
+
+        if (Input.GetButtonDown(fireButton))
+        {
+            var bullet = bullets.FirstOrDefault(x => x.gameObject.activeSelf == false);
+
+            if (bullet == null)
+            {
+                bullet = Instantiate(bulletInstance.gameObject).GetComponent<Bullet>();
+                bullet.Group = Group;
+                bullets.Add(bullet);
+            }
+
+            bullet.transform.position = this.transform.position;
+
+            // only left right for now
+            // TODO : up down movements
+            var leftRightDirection = this.transform.localScale.x < 0 ? -1 : 1;
+            bullet.Fire(new Vector2(leftRightDirection, 0));
         }
     }
 
