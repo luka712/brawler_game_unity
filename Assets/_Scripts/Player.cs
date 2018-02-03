@@ -30,7 +30,9 @@ public class Player : MonoBehaviour
     public string fireButton = "Fire_P1";
 
     // events
-    public Action OnDeath;
+    public event Action<Player> OnDeath;
+
+    public bool Spawning { get; private set; }
 
     private void Start()
     {
@@ -38,7 +40,7 @@ public class Player : MonoBehaviour
             .FirstOrDefault(x => x.gameObject.CompareTag(Tags.PlayerGroundCollider));
         rigidBody = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-
+        CanTeleport = true;
         Health = 100;
     }
 
@@ -59,11 +61,14 @@ public class Player : MonoBehaviour
                 if (OnDeath != null)
                 {
                     spriteRenderer.color = spriteRenderer.color.SetAlpha(0f);
-                    OnDeath();
+                    OnDeath(this);
                 }
             }
         }
     }
+
+    public bool CanTeleport;
+    public bool IsTeleporting; 
     
     /// <summary>
     /// Gets player team.
@@ -82,6 +87,10 @@ public class Player : MonoBehaviour
                 {
                     goingUp = false;
                     spawnCounter--;
+                    if(spawnCounter <= 0)
+                    {
+                        Spawning = false;
+                    }
                 }
             }
             else
@@ -95,6 +104,11 @@ public class Player : MonoBehaviour
             spriteRenderer.color = spriteRenderer.color.SetAlpha(alpha);
         }
 
+       
+    }
+
+    private void FixedUpdate()
+    {
         if (Input.GetButtonDown(fireButton))
         {
             var bullet = bullets.FirstOrDefault(x => x.gameObject.activeSelf == false);
@@ -135,6 +149,7 @@ public class Player : MonoBehaviour
     {
         this.transform.position = position.ToVector3();
         Health = 100;
+        Spawning = true;
         if (gameStart)
         {
             gameStart = false;

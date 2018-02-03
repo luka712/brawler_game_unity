@@ -17,6 +17,7 @@ public class MovePlayer : MonoBehaviour
     private new Transform transform;
     private Rigidbody2D rigidBody;
     private Animator animator;
+    private Player player;
 
     private float initalXScale;
 
@@ -31,6 +32,7 @@ public class MovePlayer : MonoBehaviour
         transform = GetComponent<Transform>();
         rigidBody = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        player = GetComponent<Player>();
         initalXScale = transform.localScale.x;
     }
 
@@ -43,29 +45,37 @@ public class MovePlayer : MonoBehaviour
 
     private void LeftRightMovement()
     {
-        var direction = Input.GetAxis(horizontalAxis);
-        var movingFast = Input.GetButton(runButton);
-        animator.SetBool("moving", direction != 0f);
-        animator.SetBool("fast_moving", movingFast);
-        if (direction > 0f)
+        if (!player.IsTeleporting)
         {
-            direction = 1f;
-            transform.localScale = transform.localScale.ChangeComponentX(initalXScale);
-        }
-        else if (direction < 0f)
-        {
-            direction = -1f;
-            transform.localScale = transform.localScale.ChangeComponentX(-initalXScale);
-        }
+            animator.enabled = true;
+            var direction = Input.GetAxis(horizontalAxis);
+            var movingFast = Input.GetButton(runButton);
+            animator.SetBool("moving", direction != 0f);
+            animator.SetBool("fast_moving", movingFast);
+            if (direction > 0f)
+            {
+                direction = 1f;
+                transform.localScale = transform.localScale.ChangeComponentX(initalXScale);
+            }
+            else if (direction < 0f)
+            {
+                direction = -1f;
+                transform.localScale = transform.localScale.ChangeComponentX(-initalXScale);
+            }
 
-        var velocity = direction * movementSpeed * Time.deltaTime;
-        if (movingFast)
-        {
-            velocity *= 2;
+            var velocity = direction * movementSpeed * Time.deltaTime;
+            if (movingFast)
+            {
+                velocity *= 2;
+            }
+            if (velocity != 0f)
+            {
+                transform.Translate(new Vector3(velocity, 0, 0));
+            }
         }
-        if (velocity != 0f)
+        else
         {
-            transform.Translate(new Vector3(velocity, 0, 0));
+            animator.enabled = false;
         }
     }
 
@@ -91,5 +101,11 @@ public class MovePlayer : MonoBehaviour
     public void ResetJumpState()
     {
         JumpState = JumpState.None;
+    }
+
+    public void StopAnimating()
+    {
+        animator.SetBool("moving", false);
+        animator.SetBool("fast_moving", false);
     }
 }

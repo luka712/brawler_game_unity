@@ -12,21 +12,24 @@ public class Spawner : MonoBehaviour
     private List<GameObject> spawnPoints;
 
     [SerializeField]
-    private Player player;
+    private List<Player> players = new List<Player>();
 
     private Random random;
 
     // Use this for initialization
     void Start()
     {
-        StartSpawnPlayer();
-        player.OnDeath += StartSpawnPlayer;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
+        var spawnPoints = new List<Vector2>();
+        players.ForEach(x =>
+        {
+            x.OnDeath += StartSpawnPlayer;
+            var spawnPoint = GetSpawnPoint();
+            while (spawnPoints.Contains(spawnPoint))
+            {
+                spawnPoint = GetSpawnPoint();                                                                                                                                
+            }
+            StartSpawnPlayer(spawnPoint, x);
+        });
     }
 
     private Vector2 GetSpawnPoint()
@@ -35,29 +38,35 @@ public class Spawner : MonoBehaviour
             .gameObject.transform.position.ToVector2();
     }
 
-    private IEnumerator SpawnWait()
+    private IEnumerator SpawnWait(Player player)
     {
         yield return new WaitForSeconds(3f);
-        SpawnPlayer();
+        var spawnPoint = GetSpawnPoint();
+        SpawnPlayer(spawnPoint, player);
     }
 
-    private void SpawnPlayer()
+    private void SpawnPlayer(Vector2 spawnPoint, Player player)
     {
-        var spawnPoint = GetSpawnPoint();
         player.Spawn(spawnPoint);
         player.SetPosition(spawnPoint);
     }
 
-    private void StartSpawnPlayer()
+    private void StartSpawnPlayer(Player player)
+    {
+        var spawnPoint = GetSpawnPoint();
+        StartSpawnPlayer(spawnPoint, player);
+    }
+
+    private void StartSpawnPlayer(Vector2 spawnPoint, Player player)
     {
         if (gameStart)
         {
-            SpawnPlayer();
+            SpawnPlayer(spawnPoint, player);
             gameStart = false;
         }
         else
         {
-            StartCoroutine(SpawnWait());
+            StartCoroutine(SpawnWait(player));
         }
     }
 }

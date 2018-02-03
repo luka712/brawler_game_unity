@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum State { None, DeathAnimation, TeleportAnimation }
+
 public class DividedSprite
 {
     [SerializeField]
@@ -26,6 +28,16 @@ public class DividedSprite
     private float lifeTime = 0;
     private bool isActive = false;
 
+    // teleport
+    public Vector2 teleportDestination;
+    private Vector2 randomDirection;
+    private float randomDirectionForce = 0f;
+    private const float RandomDirectionForceScalar = 0.5f;
+    private float teleportSpeed = 0.1f;
+
+    public State State { get; private set; }
+
+    public Vector2 Position { get { return _this.transform.position.ToVector2(); } }
 
     // Use this for initialization
     public DividedSprite(GameObject parent)
@@ -42,14 +54,35 @@ public class DividedSprite
     // Update is called once per frame
     public void Update(float passedTime)
     {
-        if (isActive && lifeTime > 0)
+        if (isActive && lifeTime > 0 && State == State.DeathAnimation)
         {
             // multiplication is faster then division. So 0.001f.
             lifeTime -= Time.deltaTime * FadeOutSpeed * 0.01f;
             rend.color = rend.color.SetAlpha(lifeTime);
             if (lifeTime <= 0)
             {
+                State = State.None;
                 _this.gameObject.SetActive(false);
+            }
+        }
+        else if (State == State.TeleportAnimation)
+        {
+            // arbitrary random direction
+            _this.transform.position += randomDirection.ToVector3() * randomDirectionForce;
+            randomDirectionForce *= 0.9f;
+
+            // normal direction
+            var direction = teleportDestination - _this.transform.position.ToVector2();
+            if (direction.magnitude < .5f)
+            {
+                State = State.None;
+                _this.transform.position = teleportDestination;
+            }
+            else
+            {
+                direction.Normalize();
+                _this.transform.position += direction.ToVector3() * teleportSpeed;
+                _this.transform.Rotate(Vector3.forward, 0f);
             }
         }
     }
@@ -75,7 +108,7 @@ public class DividedSprite
         rend.color = parentRenderer.color;
         rend.sortingLayerName = sortingLayer;
 
-        var parentPosition = parent.transform.position;
+        var parentPosition = parentRenderer.gameObject.transform.position;
         _this.transform.position =
             new Vector3(parentPosition.x + offset.x / PixelsPerUnit, parentPosition.y + offset.y / PixelsPerUnit, parentPosition.z);
 
@@ -84,10 +117,37 @@ public class DividedSprite
         coll.size = new Vector2(sourceRect.width / PixelsPerUnit, sourceRect.height / PixelsPerUnit);
     }
 
+    public virtual void DeathAnimation(Vector2 direction, float minForce, float maxForce)
+    {
+        _this.SetActive(true);
+        State = State.DeathAnimation;
+        rigidBody.gravityScale = Gravity;
+        coll.enabled = true;
+        AddForce(direction, minForce, maxForce);
+    }
+
     public virtual void AddForce(Vector2 direction, float minForce, float maxForce)
     {
         rigidBody.AddForce(new Vector2(direction.x * Random.Range(minForce, maxForce),
             direction.y * Random.Range(minForce, maxForce)) * ForceMultiplier);
     }
 
+    public virtual void Teleport(Vector2 destination, float teleportSpeed)
+    {
+        _this.SetActive(true);
+        State = State.TeleportAnimation;
+        coll.enabled = false;
+        rigidBody.bodyType = RigidbodyType2D.Static;
+        rend.color = rend.color.SetAlpha(1f);
+        randomDirectionForce = RandomDirectionForceScalar;
+        this.teleportSpeed = teleportSpeed;
+        randomDirection = new Vector2(Random.Range(-100, 100), Random.Range(-100, 100));
+        randomDirection.Normalize();
+        teleportDestination = destination;
+    }
+
+    public void Active(bool active)
+    {
+        _this.SetActive(active);
+    }
 }

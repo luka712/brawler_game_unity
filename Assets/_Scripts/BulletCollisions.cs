@@ -7,7 +7,7 @@ public class BulletCollisions : MonoBehaviour
     [SerializeField]
     public int damage = 10;
     [SerializeField]
-    public float force = 5f;
+    public float force = 15f;
 
     private Bullet bullet;
     private Rigidbody2D rigBody;
@@ -28,14 +28,23 @@ public class BulletCollisions : MonoBehaviour
 
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        if(collision.gameObject.CompareTag(Tags.Player))
+        if (collision.gameObject.CompareTag(Tags.Player))
         {
             var player = collision.gameObject.GetComponentInParent<Player>();
-            if(bullet.Group != player.Group)
+            if (bullet.Group != player.Group)
             {
-                player.AddDamage(damage, rigBody.velocity * force);
+                var direction = rigBody.velocity * force;
+                if (player.Spawning == false)
+                {
+                    player.AddDamage(damage, direction);
+                    if (player.Health <= 0)
+                    {
+                        player.GetComponent<SpriteDivider>().Divide(direction);
+                    }
+                }
+                bullet.gameObject.SetActive(false);
             }
         }
     }
