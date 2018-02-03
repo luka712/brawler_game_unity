@@ -21,10 +21,12 @@ public class DividedSprite
     // added for fine tunning details.
     private const float ForceMultiplier = 500f;
 
+    public float pixelsPerUnit = 12f;
+
     // gravity
     private const float Gravity = 0.2f;
     private const float FadeOutSpeed = 20f;
-    private const float PixelsPerUnit = 32f;
+
     private float lifeTime = 0;
     private bool isActive = false;
 
@@ -103,18 +105,18 @@ public class DividedSprite
         {
             sourceRect.height = parentRenderer.sprite.texture.height - sourceRect.y;
         }
-        rend.sprite = Sprite.Create(parentRenderer.sprite.texture, sourceRect, Vector2.zero, PixelsPerUnit);
+        rend.sprite = Sprite.Create(parentRenderer.sprite.texture, sourceRect, Vector2.zero, pixelsPerUnit);
 
         rend.color = parentRenderer.color;
         rend.sortingLayerName = sortingLayer;
 
         var parentPosition = parentRenderer.gameObject.transform.position;
         _this.transform.position =
-            new Vector3(parentPosition.x + offset.x / PixelsPerUnit, parentPosition.y + offset.y / PixelsPerUnit, parentPosition.z);
+            new Vector3(parentPosition.x + offset.x / pixelsPerUnit, parentPosition.y + offset.y / pixelsPerUnit, parentPosition.z);
 
         // Set collision box.
-        coll.offset = new Vector2(sourceRect.width * .5f / PixelsPerUnit, sourceRect.height * .5f / PixelsPerUnit);
-        coll.size = new Vector2(sourceRect.width / PixelsPerUnit, sourceRect.height / PixelsPerUnit);
+        coll.offset = new Vector2(sourceRect.width * .5f / pixelsPerUnit, sourceRect.height * .5f / pixelsPerUnit);
+        coll.size = new Vector2(sourceRect.width / pixelsPerUnit, sourceRect.height / pixelsPerUnit);
     }
 
     public virtual void DeathAnimation(Vector2 direction, float minForce, float maxForce)

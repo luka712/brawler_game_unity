@@ -50,7 +50,7 @@ public class SpriteDivider : MonoBehaviour
 
     private IEnumerable<DividedSprite> GetGameObjectsWithSprites()
     {
-        var totalSpriteSize = new Vector2(spriteRenderer.sprite.texture.width, spriteRenderer.sprite.texture.height);
+        var totalSpriteSize = new Vector2(spriteRenderer.sprite.textureRect.width, spriteRenderer.sprite.textureRect.height);
 
         var xPass = totalSpriteSize.x / pass.x;
         var yPass = totalSpriteSize.y / pass.y;
