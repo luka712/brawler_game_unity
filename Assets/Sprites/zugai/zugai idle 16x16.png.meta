@@ -1,12 +1,12 @@
 fileFormatVersion: 2
-guid: 280259f9d933e5844aadd95b8e4e10cf
-timeCreated: 1518481986
+guid: dde9b31b72bd3f74bac853fd9c7326b0
+timeCreated: 1518248145
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
-    21300000: zugai run 16x16px_0
-    21300002: zugai run 16x16px_1
-    21300004: zugai run 16x16px_2
+    21300000: zugai idle 16x16_0
+    21300002: zugai idle 16x16_1
+    21300004: zugai idle 16x16_2
   externalObjects: {}
   serializedVersion: 4
   mipmaps:
@@ -113,7 +113,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: zugai run 16x16px_0
+      name: zugai idle 16x16_0
       rect:
         serializedVersion: 2
         x: 0
@@ -127,7 +127,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: zugai run 16x16px_1
+      name: zugai idle 16x16_1
       rect:
         serializedVersion: 2
         x: 16
@@ -141,7 +141,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: zugai run 16x16px_2
+      name: zugai idle 16x16_2
       rect:
         serializedVersion: 2
         x: 32
