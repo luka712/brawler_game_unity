@@ -19,11 +19,11 @@ public class PlayerGroundCollision : MonoBehaviour {
                 collision.gameObject.transform.position.y +
                 collision.gameObject.transform.localScale.y * 0.5f)
             {
-                movePlayer.JumpState = JumpState.None;
+                movePlayer.ResetJumpState();
             }
             else if(collision.contacts[0].point.y < movePlayer.transform.position.y)
             {
-                movePlayer.JumpState = JumpState.None;
+                movePlayer.ResetJumpState();
             }
         }
     }

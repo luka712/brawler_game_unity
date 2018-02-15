@@ -86,6 +86,7 @@ public class MovePlayer : MonoBehaviour
             if (JumpState == JumpState.None)
             {
                 JumpState = JumpState.Jumping;
+                animator.SetBool("jumping", true);
                 rigidBody.velocity = new Vector2(rigidBody.velocity.x, 0f);
                 rigidBody.AddForce(Vector2.up * jumpStrength, ForceMode2D.Impulse);
             }
@@ -101,6 +102,8 @@ public class MovePlayer : MonoBehaviour
     public void ResetJumpState()
     {
         JumpState = JumpState.None;
+        animator.SetBool("jumping", false);
+        animator.SetTrigger("landing");
     }
 
     public void StopAnimating()
