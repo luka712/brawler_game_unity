@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class Player : MonoBehaviour
+public abstract class Player : MonoBehaviour
 {
-    private Rigidbody2D rigidBody;
-    private SpriteRenderer spriteRenderer;
-    private BoxCollider2D playerGroundCollider;
-    private int health;
+    protected Rigidbody2D rigidBody;
+    protected SpriteRenderer spriteRenderer;
+    protected BoxCollider2D playerGroundCollider;
+    protected Animator animator;
+    protected int health;
 
     // Spawn
     private int spawnCounter;
@@ -17,29 +18,22 @@ public class Player : MonoBehaviour
     private float spawnAnimationSpeed = 1f;
     private bool gameStart = true;
 
-    // bullets 
-    [SerializeField]
-    private Bullet bulletInstance;
-    private List<Bullet> bullets = new List<Bullet>();
-
     // team
     [SerializeField]
-    private int group = 1;
-
-    // buttons
-    public string fireButton = "Fire_P1";
+    protected int group = 1;
 
     // events
     public event Action<Player> OnDeath;
 
     public bool Spawning { get; private set; }
 
-    private void Start()
+    protected virtual void Start()
     {
         playerGroundCollider = GetComponentsInChildren<BoxCollider2D>()
             .FirstOrDefault(x => x.gameObject.CompareTag(Tags.PlayerGroundCollider));
         rigidBody = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>();
         CanTeleport = true;
         Health = 100;
     }
@@ -102,32 +96,10 @@ public class Player : MonoBehaviour
                 }
             }
             spriteRenderer.color = spriteRenderer.color.SetAlpha(alpha);
-        }
-
-       
+        }       
     }
 
-    private void FixedUpdate()
-    {
-        if (Input.GetButtonDown(fireButton))
-        {
-            var bullet = bullets.FirstOrDefault(x => x.gameObject.activeSelf == false);
-
-            if (bullet == null)
-            {
-                bullet = Instantiate(bulletInstance.gameObject).GetComponent<Bullet>();
-                bullet.Group = Group;
-                bullets.Add(bullet);
-            }
-
-            bullet.transform.position = this.transform.position;
-
-            // only left right for now
-            // TODO : up down movements
-            var leftRightDirection = this.transform.localScale.x < 0 ? -1 : 1;
-            bullet.Fire(new Vector2(leftRightDirection, 0));
-        }
-    }
+    
 
     public void AddDamage(int damage, Vector2 feedback)
     {

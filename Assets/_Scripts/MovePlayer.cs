@@ -50,8 +50,8 @@ public class MovePlayer : MonoBehaviour
             animator.enabled = true;
             var direction = Input.GetAxis(horizontalAxis);
             var movingFast = Input.GetButton(runButton);
-            animator.SetBool("moving", direction != 0f);
-            animator.SetBool("fast_moving", movingFast);
+            animator.SetBool(ZugaiAnimations.Moving, direction != 0f);
+            animator.SetBool(ZugaiAnimations.FastMoving, movingFast);
             if (direction > 0f)
             {
                 direction = 1f;
@@ -86,7 +86,7 @@ public class MovePlayer : MonoBehaviour
             if (JumpState == JumpState.None)
             {
                 JumpState = JumpState.Jumping;
-                animator.SetBool("jumping", true);
+                animator.SetBool(ZugaiAnimations.Jumping, true);
                 rigidBody.velocity = new Vector2(rigidBody.velocity.x, 0f);
                 rigidBody.AddForce(Vector2.up * jumpStrength, ForceMode2D.Impulse);
             }
@@ -102,13 +102,13 @@ public class MovePlayer : MonoBehaviour
     public void ResetJumpState()
     {
         JumpState = JumpState.None;
-        animator.SetBool("jumping", false);
-        animator.SetTrigger("landing");
+        animator.SetBool(ZugaiAnimations.Jumping, false);
+        animator.SetTrigger(ZugaiAnimations.Landing);
     }
 
     public void StopAnimating()
     {
-        animator.SetBool("moving", false);
-        animator.SetBool("fast_moving", false);
+        animator.SetBool(ZugaiAnimations.Moving, false);
+        animator.SetBool(ZugaiAnimations.FastMoving, false);
     }
 }
