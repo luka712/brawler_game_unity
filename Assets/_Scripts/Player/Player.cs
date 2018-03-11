@@ -121,13 +121,13 @@ public abstract class Player : MonoBehaviour
     {
         this.transform.position = position.ToVector3();
         Health = 100;
-        Spawning = true;
         if (gameStart)
         {
             gameStart = false;
         }
         else
         {
+            Spawning = true;
             if (playerGroundCollider != null)
             {
                 playerGroundCollider.gameObject.SetActive(true);

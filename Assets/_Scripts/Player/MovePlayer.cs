@@ -99,14 +99,14 @@ public class MovePlayer : MonoBehaviour
         }
     }
 
-    public void ResetJumpState()
+    internal void ResetJumpState()
     {
         JumpState = JumpState.None;
         animator.SetBool(ZugaiAnimations.Jumping, false);
         animator.SetTrigger(ZugaiAnimations.Landing);
     }
 
-    public void StopAnimating()
+    internal void StopAnimating()
     {
         animator.SetBool(ZugaiAnimations.Moving, false);
         animator.SetBool(ZugaiAnimations.FastMoving, false);

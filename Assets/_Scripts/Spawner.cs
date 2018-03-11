@@ -8,11 +8,9 @@ public class Spawner : MonoBehaviour
 {
     private bool gameStart = true;
 
-    [SerializeField]
-    private List<GameObject> spawnPoints;
-
-    [SerializeField]
-    private List<Player> players = new List<Player>();
+    // editor variables
+    public List<GameObject> _spawnPoints;
+    public List<Player> _players = new List<Player>();
 
     private Random random;
 
@@ -20,7 +18,7 @@ public class Spawner : MonoBehaviour
     void Start()
     {
         var spawnPoints = new List<Vector2>();
-        players.ForEach(x =>
+        _players.ForEach(x =>
         {
             x.OnDeath += StartSpawnPlayer;
             var spawnPoint = GetSpawnPoint();
@@ -34,7 +32,7 @@ public class Spawner : MonoBehaviour
 
     private Vector2 GetSpawnPoint()
     {
-        return spawnPoints[Random.Range(0, spawnPoints.Count)]
+        return _spawnPoints[Random.Range(0, _spawnPoints.Count)]
             .gameObject.transform.position.ToVector2();
     }
 

@@ -9,14 +9,16 @@ public class PlayerZugai : Player
     private bool isBulletSpawning = false;
     private int previousAnimatorStateHash;
     private int specialBulletHash;
+    private int warmpUpBulletHash;
+    private bool detonateBullet;
+    private ZugaiBullet bullet;
 
     // editor variables
-    public string specialBulletTagName = "Zugai_Special_Attack";
-    public GameObject bulletObject;
-    public Vector2 shootingOffset = new Vector2(1f, 0f);
-    public string attackButton = "Fire_P1";
-    public string specialAttackButton = "Fire2_P1";
-    public List<Bullet> bullets = new List<Bullet>();
+    public string _specialBulletTagName = "Zugai_Special_Attack";
+    public GameObject _bulletObject;
+    public Vector2 _shootingOffset = new Vector2(1f, 0f);
+    public string _attackButton = "Fire_P1";
+    public string _specialAttackButton = "Fire2_P1";
 
 
 
@@ -24,9 +26,10 @@ public class PlayerZugai : Player
     {
         base.Start();
 
-        specialBulletHash = Animator.StringToHash(specialBulletTagName);
+        specialBulletHash = Animator.StringToHash(_specialBulletTagName);
         previousAnimatorStateHash = animator.GetCurrentAnimatorStateInfo(0).shortNameHash;
-
+        bullet = _bulletObject.GetComponent<ZugaiBullet>();
+        bullet.gameObject.SetActive(false);
     }
 
     private void FixedUpdate()
@@ -34,6 +37,7 @@ public class PlayerZugai : Player
 
         if (isBulletSpawning)
         {
+            // player animation ending check
             if (animator.GetCurrentAnimatorStateInfo(0).shortNameHash == specialBulletHash)
             {
                 isBulletSpawning = false;
@@ -41,34 +45,29 @@ public class PlayerZugai : Player
             }
         }
 
-        if (Input.GetButtonDown(attackButton))
+
+        if (Input.GetButtonDown(_attackButton))
         {
             animator.SetTrigger(ZugaiAnimations.Attack);
         }
-        else if (Input.GetButtonDown(specialAttackButton))
+        else if (Input.GetButtonDown(_specialAttackButton) && !bullet.gameObject.activeInHierarchy)
         {
             animator.SetTrigger(ZugaiAnimations.SpecialAttack);
             previousAnimatorStateHash = animator.GetCurrentAnimatorStateInfo(0).shortNameHash;
             isBulletSpawning = true;
+            detonateBullet = false;
+        }
+        else if (Input.GetButtonDown(_specialAttackButton) && bullet.gameObject.activeInHierarchy && !detonateBullet)
+        {
+            bullet.StartDetonateSequence();
         }
     }
 
     private void SpawnBullet()
     {
-        var bullet = bullets.FirstOrDefault(x => !x.isActiveAndEnabled);
         var direction = transform.localScale.x > 0 ? 1 : -1;
-        if (bullet == null)
-        {
-            bullet = Instantiate(bulletObject, 
-                this.transform.position + (new Vector2(shootingOffset.x * direction, shootingOffset.y)).ToVector3(), 
-                Quaternion.identity).GetComponent<Bullet>();
-            bullets.Add(bullet);
-        }
-        else
-        {
-            bullet.gameObject.SetActive(true);
-            bullet.gameObject.transform.position = this.transform.position + (new Vector2(shootingOffset.x * direction, shootingOffset.y)).ToVector3();
-        }
+        bullet.gameObject.SetActive(true);
+        bullet.gameObject.transform.position = this.transform.position + (new Vector2(_shootingOffset.x * direction, _shootingOffset.y)).ToVector3();
 
         // for some reason, when set active again rigidbody is not set to kinematic
         bullet.gameObject.GetComponent<Rigidbody2D>().isKinematic = true;
