@@ -4,14 +4,15 @@ public enum JumpState { None, Jumping, DoubleJump }
 
 public class MovePlayer : MonoBehaviour
 {
-    public float movementSpeed = 5f;
-    public float jumpStrength = 15f;
-    public float doubleJumpStrength = 12f;
+    private float _movementSpeed = 12f;
+    public float _jumpStrength = 15f;
+    public float _doubleJumpStrength = 12f;
+    private float _rotationCorrectionSpeed = 250f;
 
     // action
-    public string jumpButton = "Jump_P1";
-    public string runButton = "Run_P1";
-    public string horizontalAxis = "Horizontal_P1";
+    public string _jumpButton = "Jump_P1";
+    public string _runButton = "Run_P1";
+    public string _horizontalAxis = "Horizontal_P1";
 
 
     private new Transform transform;
@@ -26,6 +27,24 @@ public class MovePlayer : MonoBehaviour
     /// </summary>
     public JumpState JumpState { get; set; }
 
+    public float GravityScale
+    {
+        get { return rigidBody.gravityScale; }
+        set { rigidBody.gravityScale = value; }
+    }
+
+    public float Rotation
+    {
+        get { return transform.eulerAngles.z; }
+        set
+        {
+            transform.rotation = Quaternion.Euler(
+                new Vector3(transform.rotation.x, transform.rotation.y, value));
+        }
+    }
+
+    public bool HasParent => this.gameObject.transform.parent != null;
+
     // Use this for initialization
     private void Start()
     {
@@ -36,6 +55,10 @@ public class MovePlayer : MonoBehaviour
         initalXScale = transform.localScale.x;
     }
 
+    private void Update()
+    {
+        CorrectRotation();
+    }
 
     private void FixedUpdate()
     {
@@ -48,8 +71,8 @@ public class MovePlayer : MonoBehaviour
         if (!player.IsTeleporting)
         {
             animator.enabled = true;
-            var direction = Input.GetAxis(horizontalAxis);
-            var movingFast = Input.GetButton(runButton);
+            var direction = Input.GetAxis(_horizontalAxis);
+            var movingFast = Input.GetButton(_runButton);
             animator.SetBool(ZugaiAnimations.Moving, direction != 0f);
             animator.SetBool(ZugaiAnimations.FastMoving, movingFast);
             if (direction > 0f)
@@ -63,7 +86,14 @@ public class MovePlayer : MonoBehaviour
                 transform.localScale = transform.localScale.ChangeComponentX(-initalXScale);
             }
 
-            var velocity = direction * movementSpeed * Time.deltaTime;
+            var velocity = direction * _movementSpeed * Time.deltaTime;
+
+            // flip velocity if rotated 180
+            if(Rotation > 180)
+            {
+                velocity *= -1;
+            }
+
             if (movingFast)
             {
                 velocity *= 2;
@@ -81,21 +111,48 @@ public class MovePlayer : MonoBehaviour
 
     private void Jump()
     {
-        if (Input.GetButtonDown(jumpButton) && JumpState != JumpState.DoubleJump)
+        if (Input.GetButtonDown(_jumpButton) && JumpState != JumpState.DoubleJump)
         {
             if (JumpState == JumpState.None)
             {
                 JumpState = JumpState.Jumping;
                 animator.SetBool(ZugaiAnimations.Jumping, true);
                 rigidBody.velocity = new Vector2(rigidBody.velocity.x, 0f);
-                rigidBody.AddForce(Vector2.up * jumpStrength, ForceMode2D.Impulse);
+                rigidBody.AddForce(Vector2.up * _jumpStrength, ForceMode2D.Impulse);
             }
             else if (JumpState == JumpState.Jumping)
             {
                 JumpState = JumpState.DoubleJump;
                 rigidBody.velocity = new Vector2(rigidBody.velocity.x, 0f);
-                rigidBody.AddForce(Vector2.up * doubleJumpStrength, ForceMode2D.Impulse);
+                rigidBody.AddForce(Vector2.up * _doubleJumpStrength, ForceMode2D.Impulse);
             }
+        }
+    }
+
+    private void CorrectRotation()
+    {
+        var rotation = this.transform.rotation.eulerAngles;
+        if (!HasParent && rotation.z != 0)
+        {
+            // degrees
+            if (rotation.z > 180)
+            {
+                rotation.z += _rotationCorrectionSpeed * Time.deltaTime;
+                if (rotation.z > 360)
+                {
+                    rotation.z = 0;
+                }
+            }
+            else
+            {
+                rotation.z -= _rotationCorrectionSpeed * Time.deltaTime;
+                if (rotation.z < 0)
+                {
+                    rotation.z = 0;
+                }
+            }
+
+            transform.rotation = Quaternion.Euler(rotation);
         }
     }
 
@@ -110,5 +167,10 @@ public class MovePlayer : MonoBehaviour
     {
         animator.SetBool(ZugaiAnimations.Moving, false);
         animator.SetBool(ZugaiAnimations.FastMoving, false);
+    }
+
+    internal void SetParent(Transform transform)
+    {
+        this.gameObject.transform.SetParent(transform);
     }
 }

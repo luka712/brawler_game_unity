@@ -4,12 +4,20 @@ using UnityEngine;
 
 public class StickPlayer : MonoBehaviour
 {
+    // stick player to platform, only if rotation is zero.
+
+    public float _playerGravityScale = 1.5f;
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if(collision.gameObject.CompareTag(Tags.Player))
+        if (collision.gameObject.CompareTag(Tags.Player))
         {
-            collision.gameObject.transform.parent.gameObject.transform.SetParent(this.transform.parent);
-            collision.gameObject.transform.parent.gameObject.transform.GetComponent<Rigidbody2D>().gravityScale = 0f;
+            var player = collision.gameObject.GetComponentInParent<MovePlayer>();
+            if (!player.HasParent && this.transform.eulerAngles.z == 0) 
+            {
+                player.SetParent(this.transform.parent);
+                player.GravityScale = 0f;
+            }
         }
     }
 
@@ -17,8 +25,12 @@ public class StickPlayer : MonoBehaviour
     {
         if (collision.gameObject.CompareTag(Tags.Player))
         {
-            collision.gameObject.transform.parent.gameObject.transform.SetParent(null);
-            collision.gameObject.transform.parent.gameObject.transform.GetComponent<Rigidbody2D>().gravityScale = 1.5f;
+            var player = collision.gameObject.GetComponentInParent<MovePlayer>();
+            if (player.HasParent)
+            {
+                player.SetParent(null); // this.transform.parent);
+                player.GravityScale = _playerGravityScale;
+            }
         }
     }
 }
