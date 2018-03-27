@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿
 using UnityEngine;
 
 public enum State { None, DeathAnimation, TeleportAnimation }
@@ -21,7 +20,7 @@ public class DividedSprite
     // added for fine tunning details.
     private const float ForceMultiplier = 500f;
 
-    public float pixelsPerUnit = 12f;
+    public float pixelsPerUnit = 8f;
 
     // gravity
     private const float Gravity = 0.2f;

@@ -35,7 +35,7 @@ public class BulletCollisions : MonoBehaviour
                     player.AddDamage(_damage, direction);
                     if (player.Health <= 0)
                     {
-                        player.GetComponent<SpriteDivider>().Divide(direction);
+                        //player.GetComponent<SpriteDivider>().Divide(direction);
                     }
                 }
                 bullet.gameObject.SetActive(false);

@@ -73,7 +73,7 @@ public class ZugaiBullet : Bullet
                     player.AddDamage(_applyPlayerdamage, direction);
                     if (player.Health <= 0)
                     {
-                        player.GetComponent<SpriteDivider>().Divide(direction);
+                       // player.GetComponent<SpriteDivider>().Divide(direction);
                     }
                 }
             }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using System;
 
 public class PlayerZugai : Player
 {
@@ -20,11 +21,12 @@ public class PlayerZugai : Player
     public string _attackButton = "Fire_P1";
     public string _specialAttackButton = "Fire2_P1";
 
-
+    public Animator Animator => GetComponent<Animator>();
 
     protected override void Start()
     {
         base.Start();
+        State.Push(new PlayerIdleState());
 
         specialBulletHash = Animator.StringToHash(_specialBulletTagName);
         previousAnimatorStateHash = animator.GetCurrentAnimatorStateInfo(0).shortNameHash;
@@ -32,7 +34,19 @@ public class PlayerZugai : Player
         bullet.gameObject.SetActive(false);
     }
 
+
     private void FixedUpdate()
+    {
+        State.Peek().HandleInput(this);
+    }
+
+    protected override void Update()
+    {
+        base.Update();
+        State.Peek().Update(this);
+    }
+
+    private void FixedUpdateOld()
     {
 
         if (isBulletSpawning)
@@ -48,11 +62,11 @@ public class PlayerZugai : Player
 
         if (Input.GetButtonDown(_attackButton))
         {
-            animator.SetTrigger(ZugaiAnimations.Attack);
+            animator.SetTrigger(Animations.Attack);
         }
         else if (Input.GetButtonDown(_specialAttackButton) && !bullet.gameObject.activeInHierarchy)
         {
-            animator.SetTrigger(ZugaiAnimations.SpecialAttack);
+            animator.SetTrigger(Animations.SpecialAttack);
             previousAnimatorStateHash = animator.GetCurrentAnimatorStateInfo(0).shortNameHash;
             isBulletSpawning = true;
             detonateBullet = false;
@@ -75,4 +89,7 @@ public class PlayerZugai : Player
             (bullet.transform.localScale.x * direction);
         bullet.Fire(new Vector2(direction, 0));
     }
+
+
+
 }

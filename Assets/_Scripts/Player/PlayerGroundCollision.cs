@@ -1,31 +1,31 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
-public class PlayerGroundCollision : MonoBehaviour {
+public class PlayerGroundCollision : MonoBehaviour
+{
+    private Player player;
 
-    private MovePlayer movePlayer;
-
-	// Use this for initialization
-	void Start ()
+    void Start ()
     {
-        movePlayer = GetComponentInParent<MovePlayer>();
-
+        player = GetComponentInParent<Player>();
 	}
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if(collision.gameObject.CompareTag(Tags.Ground))
         {
-            if(collision.contacts[0].point.y >
-                collision.gameObject.transform.position.y +
-                collision.gameObject.transform.localScale.y * 0.5f)
+            if(IsCollidingGround(collision.contacts[0].point))
             {
-                movePlayer.ResetJumpState();
-            }
-            else if(collision.contacts[0].point.y < movePlayer.transform.position.y)
-            {
-                movePlayer.ResetJumpState();
+                player.GroundCollision();
             }
         }
+    }
+
+    private bool IsCollidingGround(Vector2 collisionContactPoint)
+    {
+        var checkIfBelowPlayer = collisionContactPoint.y < player.Position.y;
+
+        return checkIfBelowPlayer;
     }
 
 }

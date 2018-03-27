@@ -26,7 +26,7 @@ public class Collisions : MonoBehaviour
         {
             player.AddDamage(25, Vector2.up * ForceFromSpike);
             movePlayer.ResetJumpState();
-            spriteDivider.Divide(Vector2.up);
+          //  spriteDivider.Divide(Vector2.up);
         }
         else if (collision.gameObject.CompareTag(Tags.TrapBoxSpike))
         {
@@ -40,7 +40,7 @@ public class Collisions : MonoBehaviour
 
             if (player.Health <= 0f)
             {
-                spriteDivider.Divide(direction);
+               // spriteDivider.Divide(direction);
             }
         }
     }

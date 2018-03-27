@@ -1,4 +1,4 @@
-﻿public class ZugaiAnimations
+﻿public class Animations
 {
     public const string Attack = "attack";
     public const string Moving = "moving";
