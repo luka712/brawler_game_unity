@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public abstract class Player : MonoBehaviour, ITeleportObjectInterface
+public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPlayerInterface
 {
     #region Editor Fields
 
@@ -19,6 +19,7 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface
 
     private float currentFramePosY;
     private float previousFramePosY;
+    private float initalGravity;
     private DividedSprite[] dividedSprites;
     private Vector3 positionToTeleportTo;
     private ICommand pushTeleportStateCommand = new PushTeleportStateCommand();
@@ -76,11 +77,19 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface
         private set { rigidBody.velocity = value; }
     }
 
+    public float Rotation
+    {
+        get { return transform.localRotation.eulerAngles.z; }
+        set { transform.localRotation = Quaternion.Euler(0, 0, value); }
+    }
+
     public TeleportState TeleportState { get; set; }
 
     public bool IsOnGround { get; private set; }
 
     public ISpriteDivider SpriteDivider { get; private set; }
+
+    public bool IsStickedToParent => this.transform.parent != null;
 
     #endregion
 
@@ -100,8 +109,9 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface
         playerCollisionsCollider = colliders
             .FirstOrDefault(x => x.gameObject.CompareTag(Tags.Player));
 
-
         rigidBody = GetComponent<Rigidbody2D>();
+        initalGravity = rigidBody.gravityScale;
+
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
         Health = 100;
@@ -168,6 +178,14 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface
         // update
         UpdateDividedSprites();
 
+        if (Rotation != 0)
+        {
+            Rotation *= 0.9f;
+            if (Rotation < 1f)
+            {
+                Rotation = 0f;
+            }
+        }
     }
 
 
@@ -293,8 +311,8 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface
     /// </summary>
     public void TeleportExit()
     {
-        if(TeleportState == TeleportState.NotAble)
-              TeleportState = TeleportState.Able;
+        if (TeleportState == TeleportState.NotAble)
+            TeleportState = TeleportState.Able;
     }
     #endregion
 
@@ -358,7 +376,28 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface
         spriteRenderer.color = spriteRenderer.color.SetAlpha(value ? 0f : 1f);
     }
 
+    #endregion
 
+    #region Stick to parent
+
+    /// <summary>
+    /// Stick player to parent object.
+    /// </summary>
+    public void StickToParent(Transform parentTransform)
+    {
+        this.transform.parent = parentTransform;
+        rigidBody.gravityScale = 0;
+        Rotation = 0;
+    }
+
+    /// <summary>
+    /// Unsticks player from parent object.
+    /// </summary>
+    public void UnstickFromParent()
+    {
+        this.transform.parent = null;
+        rigidBody.gravityScale = initalGravity;
+    }
 
     #endregion
 }

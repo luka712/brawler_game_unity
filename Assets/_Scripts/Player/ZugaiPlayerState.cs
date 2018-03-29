@@ -126,13 +126,13 @@ public class PlayerJumpState : IPlayerState
 
         if (direction > 0)
         {
-            player.LookLeft();
+            player.LookRight();
             player.MoveRight();
         }
         else if (direction < 0)
         {
             player.MoveLeft();
-            player.LookRight();
+            player.LookLeft();
         }
 
 
