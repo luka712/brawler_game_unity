@@ -10,6 +10,8 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
     public string _horizontalAxis = "Horizontal_P1";
     public string _jumpButton = "Jump_P1";
+    public string _attackButton = "Fire_P1";
+    public string _specialAttackButton = "Fire2_P1";
     public float _movementSpeed = 12f;
     public float _jumpStrength = 15f;
 
@@ -27,6 +29,7 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
     protected BoxCollider2D playerGroundCollider;
     protected BoxCollider2D playerCollisionsCollider;
+    protected BoxCollider2D playerAttackCollider;
 
     #endregion
 
@@ -98,16 +101,24 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
         MoveLookup = new PlayerMovesLookup
         {
             HorizontalAxis = _horizontalAxis,
-            JumpButton = _jumpButton
+            JumpButton = _jumpButton,
+            AttackButton = _attackButton,
+            SpecialAttackButton = _specialAttackButton
         };
         SpriteDivider = GetComponent<ISpriteDivider>();
         dividedSprites = SpriteDivider.DividedSprites;
 
+        /* get colliders
+         * attack collider should be active, only if attacking
+         */
         var colliders = GetComponentsInChildren<BoxCollider2D>();
         playerGroundCollider = colliders
-            .FirstOrDefault(x => x.gameObject.CompareTag(Tags.PlayerGroundCollider));
+            .First(x => x.gameObject.CompareTag(Tags.PlayerGroundCollider));
         playerCollisionsCollider = colliders
-            .FirstOrDefault(x => x.gameObject.CompareTag(Tags.Player));
+            .First(x => x.gameObject.CompareTag(Tags.Player));
+        playerAttackCollider = colliders
+            .First(x => x.gameObject.CompareTag(Tags.AttackCollider));
+        ActivateAttackCollider(false);
 
         rigidBody = GetComponent<Rigidbody2D>();
         initalGravity = rigidBody.gravityScale;
@@ -268,6 +279,15 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
     public virtual void PlayLandingAnimation()
         => animator.SetTrigger(Animations.Landing);
+
+    public virtual void PlayAttackAnimation()
+        => animator.SetTrigger(Animations.Attack);
+
+    public virtual void PlaySpecialAttackAnimation()
+        => animator.SetTrigger(Animations.SpecialAttack);
+
+    public virtual void ActivateAttackCollider(bool value = true)
+        => playerAttackCollider.enabled = value;
 
     #endregion
 

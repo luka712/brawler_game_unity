@@ -1,13 +1,12 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 
 /***************************************************************************
- * IDLE_STATE       -> ( MOVE_STATE, JUMP_STATE)  
- * MOVE_STATE       -> ( IDLE_STATE, JUMP_STATE)  
+ * IDLE_STATE       -> ( MOVE_STATE, JUMP_STATE, ATTACK_STATE)  
+ * MOVE_STATE       -> ( IDLE_STATE, JUMP_STATE, ATTACK_STATE)  
  * JUMP_STATE       -> ( IDLE_STATE, MOVE_STATE)              
  * IS_TELEPORTING   -> ( IDLE_STATE )
- * 
+ * ATTACK_STATE     -> PREVIOUS 
  * 
  * 
  * 
@@ -18,7 +17,7 @@ using UnityEngine;
  * lvl 1     IDLE_STATE -- MOVE_STATE -- JUMP_STATE -- IS_TELEPORTING
  *               |             |             |               |
  *               V             V             V               V
- * 
+ *          ATTACK_STATE  ATTACK_STATE   
  * 
  * 
  * **************************************************************************/
@@ -38,11 +37,13 @@ public class PlayerIdleState : IPlayerState
     private bool isIdle;
     private float direction;
     private bool jump;
+    private bool attack;
 
     public void HandleInput(Player player)
     {
         direction = Input.GetAxis(player.MoveLookup.HorizontalAxis);
         jump = Input.GetButtonDown(player.MoveLookup.JumpButton);
+        attack = Input.GetButtonDown(player.MoveLookup.AttackButton);
     }
 
     public void Update(Player player)
@@ -63,6 +64,9 @@ public class PlayerIdleState : IPlayerState
         if (jump)
             player.State.Push(new PlayerJumpState());
 
+        if (attack)
+            player.State.Push(new PlayerAttackState());
+
     }
 }
 
@@ -70,11 +74,13 @@ public class PlayerMoveState : IPlayerState
 {
     private float direction;
     private bool jump;
+    private bool attack;
 
     public void HandleInput(Player player)
     {
         direction = Input.GetAxis(player.MoveLookup.HorizontalAxis);
         jump = Input.GetButtonDown(player.MoveLookup.JumpButton);
+        attack = Input.GetButtonDown(player.MoveLookup.AttackButton);
     }
 
     public void Update(Player player)
@@ -103,6 +109,8 @@ public class PlayerMoveState : IPlayerState
             player.State.Push(new PlayerJumpState());
         }
 
+        if (attack)
+            player.State.Push(new PlayerAttackState());
     }
 }
 
@@ -156,5 +164,18 @@ public class PlayerTeleportingState : IPlayerState
     public void Update(Player player)
     {
         
+    }
+}
+
+public class PlayerAttackState : IPlayerState
+{
+    public void HandleInput(Player player) { }
+
+    public void Update(Player player)
+    {
+        player.ActivateAttackCollider();
+        player.PlayAttackAnimation();
+        player.ActivateAttackCollider(false);
+        player.State.Pop();
     }
 }

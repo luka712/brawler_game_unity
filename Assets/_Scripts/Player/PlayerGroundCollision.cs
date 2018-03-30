@@ -14,15 +14,19 @@ public class PlayerGroundCollision : MonoBehaviour
     {
         if(collision.gameObject.CompareTag(Tags.Ground))
         {
-            if(IsCollidingGround(collision.contacts[0].point))
+            if(IsCollidingGround(collision))
             {
                 player.GroundCollision();
             }
         }
     }
 
-    private bool IsCollidingGround(Vector2 collisionContactPoint)
+    private bool IsCollidingGround(Collision2D collision)
     {
+        if (collision.contacts.Length == 0)
+            return false;
+
+        var collisionContactPoint = collision.contacts[0].point;
         var checkIfBelowPlayer = collisionContactPoint.y < player.Position.y;
 
         return checkIfBelowPlayer;

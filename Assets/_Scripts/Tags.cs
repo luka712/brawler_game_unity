@@ -9,4 +9,5 @@ public class Tags
     public const string Player = "Player";
     public const string PlayerGroundCollider = "PlayerGroundCollider";
     public const string RegularBullet = "RegularBullet";
+    public const string AttackCollider = "AttackCollider";
 }

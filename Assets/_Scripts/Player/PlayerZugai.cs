@@ -18,8 +18,6 @@ public class PlayerZugai : Player
     public string _specialBulletTagName = "Zugai_Special_Attack";
     public GameObject _bulletObject;
     public Vector2 _shootingOffset = new Vector2(1f, 0f);
-    public string _attackButton = "Fire_P1";
-    public string _specialAttackButton = "Fire2_P1";
 
     public Animator Animator => GetComponent<Animator>();
 
@@ -37,13 +35,16 @@ public class PlayerZugai : Player
 
     private void FixedUpdate()
     {
-        State.Peek().HandleInput(this);
+        
+        if(State.Count > 0)
+            State.Peek().HandleInput(this);
     }
 
     protected override void Update()
     {
         base.Update();
-        State.Peek().Update(this);
+        if(State.Count > 0)
+            State.Peek().Update(this);
     }
 
     private void FixedUpdateOld()
