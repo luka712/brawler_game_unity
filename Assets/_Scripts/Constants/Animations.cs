@@ -1,4 +1,4 @@
-﻿public class Animations
+﻿public class AnimationVariables
 {
     public const string Attack = "attack";
     public const string Moving = "moving";

@@ -68,7 +68,7 @@ public class ZugaiBullet : Bullet
             {
                 var direction = (collision.gameObject.transform.position - transform.position)
                     .ToVector2().normalized * _applyPlayerForce;
-                if (player.Spawning == false)
+                if (player.IsSpawning == false)
                 {
                     player.AddDamage(_applyPlayerdamage, direction);
                     if (player.Health <= 0)

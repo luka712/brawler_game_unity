@@ -155,14 +155,14 @@ public class MovePlayer : MonoBehaviour
     internal void ResetJumpState()
     {
         JumpState = JumpState.None;
-        animator.SetBool(Animations.Jumping, false);
-        animator.SetTrigger(Animations.Landing);
+        animator.SetBool(AnimationVariables.Jumping, false);
+        animator.SetTrigger(AnimationVariables.Landing);
     }
 
     internal void StopAnimating()
     {
-        animator.SetBool(Animations.Moving, false);
-        animator.SetBool(Animations.FastMoving, false);
+        animator.SetBool(AnimationVariables.Moving, false);
+        animator.SetBool(AnimationVariables.FastMoving, false);
     }
 
     internal void SetParent(Transform transform)

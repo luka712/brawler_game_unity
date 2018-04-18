@@ -1,22 +1,23 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 
 /***************************************************************************
  * IDLE_STATE       -> ( MOVE_STATE, JUMP_STATE, ATTACK_STATE)  
  * MOVE_STATE       -> ( IDLE_STATE, JUMP_STATE, ATTACK_STATE)  
- * JUMP_STATE       -> ( IDLE_STATE, MOVE_STATE)              
+ * JUMP_STATE       -> ( IDLE_STATE, MOVE_STATE, DOUBLE_JUMP)              
  * IS_TELEPORTING   -> ( IDLE_STATE )
  * ATTACK_STATE     -> PREVIOUS 
- * 
+ * DOUBLE_JUMP      -> ( IDLE_STATE, MOVE_STATE )  
  * 
  * 
  * 
  * 
  * 
  * HIERARCHY 
- * lvl 1     IDLE_STATE -- MOVE_STATE -- JUMP_STATE -- IS_TELEPORTING
- *               |             |             |               |
- *               V             V             V               V
+ * lvl 1     IDLE_STATE -- MOVE_STATE -- JUMP_STATE -- IS_TELEPORTING  -- DOUBLE_JUMP
+ *               |             |             |               |                 |
+ *               V             V             V               V                 v
  *          ATTACK_STATE  ATTACK_STATE   
  * 
  * 
@@ -31,22 +32,55 @@ public interface IPlayerState
     void Update(Player player);
 }
 
-
-public class PlayerIdleState : IPlayerState
+public abstract class PlayerState : IPlayerState
 {
-    private bool isIdle;
-    private float direction;
-    private bool jump;
-    private bool attack;
+    protected float direction;
+    protected bool jump;
+    protected bool attack;
+    protected bool jumpPress;
 
-    public void HandleInput(Player player)
+    public virtual void HandleInput(Player player)
     {
+
         direction = Input.GetAxis(player.MoveLookup.HorizontalAxis);
         jump = Input.GetButtonDown(player.MoveLookup.JumpButton);
         attack = Input.GetButtonDown(player.MoveLookup.AttackButton);
+        jumpPress = Input.GetButtonDown(player.MoveLookup.JumpButton);
     }
 
-    public void Update(Player player)
+    public abstract void Update(Player player);
+
+    public virtual void MoveLeft(Player player)
+    {
+        player.MoveLeft();
+        player.LookLeft();
+    }
+
+    public virtual void MoveRight(Player player)
+    {
+        player.MoveRight();
+        player.LookRight();
+    }
+
+    public virtual void Move(Player player)
+    {
+        if (direction > 0)
+        {
+            MoveRight(player);
+        }
+        else if (direction < 0)
+        {
+            MoveLeft(player);
+        }
+    }
+}
+
+
+public class PlayerIdleState : PlayerState, IPlayerState
+{
+    private bool isIdle;
+
+    public override void Update(Player player)
     {
         // no need to constantly set animation.
         if (!isIdle)
@@ -64,37 +98,26 @@ public class PlayerIdleState : IPlayerState
         if (jump)
             player.State.Push(new PlayerJumpState());
 
-        if (attack)
-            player.State.Push(new PlayerAttackState());
+        // TODO
+        //if (attack)
+        //    player.State.Push(new PlayerAttackState());
 
     }
 }
 
-public class PlayerMoveState : IPlayerState
+public class PlayerMoveState : PlayerState, IPlayerState
 {
-    private float direction;
-    private bool jump;
-    private bool attack;
 
-    public void HandleInput(Player player)
-    {
-        direction = Input.GetAxis(player.MoveLookup.HorizontalAxis);
-        jump = Input.GetButtonDown(player.MoveLookup.JumpButton);
-        attack = Input.GetButtonDown(player.MoveLookup.AttackButton);
-    }
-
-    public void Update(Player player)
+    public override void Update(Player player)
     {
         if (direction > 0)
         {
-            player.MoveRight();
-            player.LookRight();
+            MoveRight(player);
             player.PlayMoveAnimation();
         }
         else if (direction < 0)
         {
-            player.MoveLeft();
-            player.LookLeft();
+            MoveLeft(player);
             player.PlayMoveAnimation();
         }
         else
@@ -108,22 +131,14 @@ public class PlayerMoveState : IPlayerState
             player.PlayMoveAnimation(play: false);
             player.State.Push(new PlayerJumpState());
         }
-
-        if (attack)
-            player.State.Push(new PlayerAttackState());
     }
 }
 
-public class PlayerJumpState : IPlayerState
+public class PlayerJumpState : PlayerState, IPlayerState
 {
     private bool isInJump;
-    private float direction;
 
-    public void HandleInput(Player player) =>
-        direction = Input.GetAxis(player.MoveLookup.HorizontalAxis);
-
-
-    public void Update(Player player)
+    public override void Update(Player player)
     {
         if (!isInJump)
         {
@@ -132,17 +147,7 @@ public class PlayerJumpState : IPlayerState
             player.PlayJumpAnimation();
         }
 
-        if (direction > 0)
-        {
-            player.LookRight();
-            player.MoveRight();
-        }
-        else if (direction < 0)
-        {
-            player.MoveLeft();
-            player.LookLeft();
-        }
-
+        Move(player);
 
         if (player.CheckIfPlayerIsGrounded() == true)
         {
@@ -154,7 +159,25 @@ public class PlayerJumpState : IPlayerState
             else
                 player.State.Push(new PlayerMoveState());
         }
+
+        if (isInJump && jumpPress)
+        {
+            JumpPress(player);
+        }
     }
+
+    // Made this abstract, double jump state is same and does nothing on jump
+    public virtual void JumpPress(Player player)
+    {
+        player.DoubleJump();
+        player.State.Pop();
+        player.State.Push(new PlayerDoubleJumpState());
+    }
+}
+
+public class PlayerDoubleJumpState : PlayerJumpState, IPlayerState
+{
+    public override void JumpPress(Player player) { }
 }
 
 public class PlayerTeleportingState : IPlayerState
@@ -163,19 +186,6 @@ public class PlayerTeleportingState : IPlayerState
 
     public void Update(Player player)
     {
-        
     }
 }
 
-public class PlayerAttackState : IPlayerState
-{
-    public void HandleInput(Player player) { }
-
-    public void Update(Player player)
-    {
-        player.ActivateAttackCollider();
-        player.PlayAttackAnimation();
-        player.ActivateAttackCollider(false);
-        player.State.Pop();
-    }
-}

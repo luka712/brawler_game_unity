@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPlayerInterface
+public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPlayerInterface, ISpawnPlayerInterface
 {
     #region Editor Fields
 
@@ -14,85 +14,156 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     public string _specialAttackButton = "Fire2_P1";
     public float _movementSpeed = 12f;
     public float _jumpStrength = 15f;
+    public float _doubleJumpStrength = 10f;
+    public float _spawnAnimationSpeed = 1f;
+    public int _playerHealth = 3;
+    public int _playerSpawnFadeInOuts = 3;
 
     #endregion
 
     #region Fields
 
-    private float currentFramePosY;
-    private float previousFramePosY;
+    private int playerAttackHash;
     private float initalGravity;
     private DividedSprite[] dividedSprites;
     private Vector3 positionToTeleportTo;
     private ICommand pushTeleportStateCommand = new PushTeleportStateCommand();
     private ICommand popTeleportStateCommand = new PopTeleportStateCommand();
 
+    // Colliders
     protected BoxCollider2D playerGroundCollider;
     protected BoxCollider2D playerCollisionsCollider;
     protected BoxCollider2D playerAttackCollider;
 
-    #endregion
-
-    protected Rigidbody2D rigidBody;
-    protected SpriteRenderer spriteRenderer;
-
-
-
-    protected Animator animator;
-    protected int health;
-
-    // Spawn
+    // Spawn variables
     private int spawnCounter;
     private bool goingUp;
-    private float spawnAnimationSpeed = 1f;
     private bool gameStart = true;
+
+    // Components
+    protected SpriteRenderer spriteRenderer;
+    protected Rigidbody2D rigidBody;
+    protected Animator animator;
+
+    #endregion
+
+    #region Events
+
+    public event Action<ISpawnPlayerInterface> OnStartSpawning;
+    public event Action<Player> OnDeath;
+
+    #endregion
+
+    protected int health;
+
+
 
     // team
     [SerializeField]
     protected int group = 1;
 
     // events
-    public event Action<Player> OnDeath;
+
 
     #region Properties
 
+    /// <summary>
+    /// Handles player states.
+    /// </summary>
     public Stack<IPlayerState> State { get; set; } = new Stack<IPlayerState>();
 
-    public bool Spawning { get; private set; }
+    /// <summary>
+    /// Indicates if player is currently spawning.
+    /// </summary>
+    public bool IsSpawning { get; private set; }
 
+    /// <summary>
+    /// Move lookup.
+    /// </summary>
     public PlayerMovesLookup MoveLookup { get; private set; }
 
+    /// <summary>
+    /// The player scale.
+    /// </summary>
     public Vector3 Scale
     {
         get { return transform.localScale; }
         set { transform.localScale = value; }
     }
 
+    /// <summary>
+    /// The player position.
+    /// </summary>
     public Vector3 Position
     {
         get { return transform.position; }
         private set { transform.position = value; }
     }
 
+    /// <summary>
+    /// The player velocity.
+    /// </summary>
     public Vector2 Velocity
     {
         get { return rigidBody.velocity; }
         private set { rigidBody.velocity = value; }
     }
 
+    /// <summary>
+    /// Player rotation around z.
+    /// </summary>
     public float Rotation
     {
         get { return transform.localRotation.eulerAngles.z; }
         set { transform.localRotation = Quaternion.Euler(0, 0, value); }
     }
 
+    /// <summary>
+    /// Current teleport state.
+    /// </summary>
     public TeleportState TeleportState { get; set; }
 
+    /// <summary>
+    /// Is player on ground.
+    /// </summary>
     public bool IsOnGround { get; private set; }
 
+    /// <summary>
+    /// The sprite divider interface.
+    /// </summary>
     public ISpriteDivider SpriteDivider { get; private set; }
 
+    /// <summary>
+    /// Is player sticked to parent. Used for wall running.
+    /// </summary>
     public bool IsStickedToParent => this.transform.parent != null;
+
+    /// <summary>
+    /// The player health.
+    /// </summary>
+    public int Health
+    {
+        get { return health; }
+        set
+        {
+            health = value;
+            if (health > _playerHealth)
+            {
+                health = _playerHealth;
+            }
+            else if (health <= 0)
+            {
+                health = 0;
+                playerGroundCollider.gameObject.SetActive(false);
+                if (OnDeath != null)
+                {
+                    spriteRenderer.color = spriteRenderer.color.SetAlpha(0f);
+                    OnStartSpawning(this);
+                    OnDeath(this);
+                }
+            }
+        }
+    }
 
     #endregion
 
@@ -125,31 +196,14 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
-        Health = 100;
+
+        // animation hashes
+        playerAttackHash = Animator.StringToHash(AnimationNames.ZugaiAttack);
+
+        Health = _playerHealth;
+        spawnCounter = _playerSpawnFadeInOuts;
     }
 
-    public int Health
-    {
-        get { return health; }
-        set
-        {
-            health = value;
-            if (health > 100)
-            {
-                health = 100;
-            }
-            else if (health <= 0)
-            {
-                health = 0;
-                playerGroundCollider.gameObject.SetActive(false);
-                if (OnDeath != null)
-                {
-                    spriteRenderer.color = spriteRenderer.color.SetAlpha(0f);
-                    OnDeath(this);
-                }
-            }
-        }
-    }
 
     /// <summary>
     /// Gets player team.
@@ -159,35 +213,8 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     protected virtual void Update()
     {
 
-        //if (spawnCounter > 0)
-        //{
-        //    var alpha = spriteRenderer.color.a;
-        //    if (goingUp)
-        //    {
-        //        alpha += spawnAnimationSpeed * Time.deltaTime;
-        //        if (alpha >= 1f)
-        //        {
-        //            goingUp = false;
-        //            spawnCounter--;
-        //            if (spawnCounter <= 0)
-        //            {
-        //                Spawning = false;
-        //            }
-        //        }
-        //    }
-        //    else
-        //    {
-        //        alpha -= spawnAnimationSpeed * Time.deltaTime;
-        //        if (alpha <= 0f)
-        //        {
-        //            goingUp = true;
-        //        }
-        //    }
-        //    spriteRenderer.color = spriteRenderer.color.SetAlpha(alpha);
-        //}
-
-        // update
         UpdateDividedSprites();
+        SpawnPlayer();
 
         if (Rotation != 0)
         {
@@ -217,30 +244,6 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
         this.gameObject.transform.position = position;
     }
 
-    public void Spawn(Vector2 position)
-    {
-        this.transform.position = position.ToVector3();
-        Health = 100;
-        if (gameStart)
-        {
-            gameStart = false;
-        }
-        else
-        {
-            Spawning = true;
-            if (playerGroundCollider != null)
-            {
-                playerGroundCollider.gameObject.SetActive(true);
-            }
-            else
-            {
-                Debug.LogWarning("playerGroundCollider is null. Player 114");
-            }
-            spriteRenderer.color = spriteRenderer.color.SetAlpha(0f);
-            spawnCounter = 3;
-        }
-    }
-
 
     #region  Public player methods.
 
@@ -250,44 +253,53 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     public void LookRight()
         => ChangeLocalScaleX(Mathf.Abs(Scale.x));
 
-
     public void LookLeft()
         => ChangeLocalScaleX(Mathf.Abs(Scale.x) * -1);
 
-    public virtual void MoveRight()
+    public void MoveRight()
         => transform.Translate(new Vector3(_movementSpeed * Time.deltaTime, 0, 0));
 
-    public virtual void MoveLeft()
+    public void MoveLeft()
         => transform.Translate(new Vector3(-_movementSpeed * Time.deltaTime, 0, 0));
 
 
-    public virtual void PlayMoveAnimation(bool play = true, string animationName = Animations.Moving)
-        => animator.SetBool(Animations.Moving, play);
+    public void PlayMoveAnimation(bool play = true, string animationName = AnimationVariables.Moving)
+        => animator.SetBool(AnimationVariables.Moving, play);
 
-    public virtual void Jump()
+    public void Jump()
     {
         IsOnGround = false;
         Velocity = new Vector2(Velocity.x, 0f);
         rigidBody.AddForce(Vector2.up * _jumpStrength, ForceMode2D.Impulse);
     }
 
-    public virtual void PlayJumpAnimation(bool play = true, string animationName = Animations.Jumping)
-        => animator.SetBool(Animations.Jumping, play);
+    public void DoubleJump()
+    {
+        IsOnGround = false;
+        Velocity = new Vector2(Velocity.x, 0f);
+        rigidBody.AddForce(Vector2.up * _doubleJumpStrength, ForceMode2D.Impulse);
+    }
 
-    public virtual void GroundCollision()
+    public void PlayJumpAnimation(bool play = true, string animationName = AnimationVariables.Jumping)
+        => animator.SetBool(AnimationVariables.Jumping, play);
+
+    public void GroundCollision()
         => IsOnGround = true;
 
-    public virtual void PlayLandingAnimation()
-        => animator.SetTrigger(Animations.Landing);
+    public void PlayLandingAnimation()
+        => animator.SetTrigger(AnimationVariables.Landing);
 
-    public virtual void PlayAttackAnimation()
-        => animator.SetTrigger(Animations.Attack);
+    public void PlayAttackAnimation()
+        => animator.SetTrigger(AnimationVariables.Attack);
 
-    public virtual void PlaySpecialAttackAnimation()
-        => animator.SetTrigger(Animations.SpecialAttack);
+    public void PlaySpecialAttackAnimation()
+        => animator.SetTrigger(AnimationVariables.SpecialAttack);
 
-    public virtual void ActivateAttackCollider(bool value = true)
+    public void ActivateAttackCollider(bool value = true)
         => playerAttackCollider.enabled = value;
+
+    public bool IsAttackAnimationPlaying()
+        => animator.GetCurrentAnimatorStateInfo(0).shortNameHash == playerAttackHash;
 
     #endregion
 
@@ -417,6 +429,69 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     {
         this.transform.parent = null;
         rigidBody.gravityScale = initalGravity;
+    }
+
+    #endregion
+
+    #region Spawn player interface
+
+    /// <summary>
+    /// Spawns the player at position.
+    /// </summary>
+    public void Spawn(Vector2 position)
+    {
+        this.transform.position = position.ToVector3(this.transform.position.z);
+        Health = _playerHealth;
+        if (gameStart)
+        {
+            gameStart = false;
+        }
+        else
+        {
+            IsSpawning = true;
+            if (playerGroundCollider != null)
+            {
+                playerGroundCollider.gameObject.SetActive(true);
+            }
+            else
+            {
+                Debug.LogWarning("playerGroundCollider is null. Player 114");
+            }
+            spriteRenderer.color = spriteRenderer.color.SetAlpha(0f);
+            spawnCounter = _playerSpawnFadeInOuts;
+        }
+    }
+
+    /// <summary>
+    /// The methods responsible for player spawn animations.
+    /// </summary>
+    private void SpawnPlayer()
+    {
+        if (spawnCounter > 0)
+        {
+            var alpha = spriteRenderer.color.a;
+            if (goingUp)
+            {
+                alpha += _spawnAnimationSpeed * Time.deltaTime;
+                if (alpha >= 1f)
+                {
+                    goingUp = false;
+                    if (--spawnCounter <= 0)
+                    {
+                        IsSpawning = false;
+                    }
+                }
+            }
+            else
+            {
+                alpha -= _spawnAnimationSpeed * Time.deltaTime;
+                if (alpha <= 0f)
+                {
+                    goingUp = true;
+                }
+            }
+            spriteRenderer.color = spriteRenderer.color.SetAlpha(alpha);
+        }
     }
 
     #endregion

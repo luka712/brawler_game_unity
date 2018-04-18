@@ -63,11 +63,11 @@ public class PlayerZugai : Player
 
         if (Input.GetButtonDown(_attackButton))
         {
-            animator.SetTrigger(Animations.Attack);
+            animator.SetTrigger(AnimationVariables.Attack);
         }
         else if (Input.GetButtonDown(_specialAttackButton) && !bullet.gameObject.activeInHierarchy)
         {
-            animator.SetTrigger(Animations.SpecialAttack);
+            animator.SetTrigger(AnimationVariables.SpecialAttack);
             previousAnimatorStateHash = animator.GetCurrentAnimatorStateInfo(0).shortNameHash;
             isBulletSpawning = true;
             detonateBullet = false;

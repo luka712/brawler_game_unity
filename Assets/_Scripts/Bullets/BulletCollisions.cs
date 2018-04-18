@@ -30,7 +30,7 @@ public class BulletCollisions : MonoBehaviour
             if (bullet.Group != player.Group)
             {
                 var direction = rigBody.velocity * _force;
-                if (player.Spawning == false)
+                if (player.IsSpawning == false)
                 {
                     player.AddDamage(_damage, direction);
                     if (player.Health <= 0)
