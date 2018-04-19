@@ -25,6 +25,7 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
     private int playerAttackHash;
     private float initalGravity;
+    private float initialTrailRendererTime;
     private DividedSprite[] dividedSprites;
     private Vector3 positionToTeleportTo;
     private ICommand pushTeleportStateCommand = new PushTeleportStateCommand();
@@ -44,6 +45,7 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     protected SpriteRenderer spriteRenderer;
     protected Rigidbody2D rigidBody;
     protected Animator animator;
+    protected TrailRenderer trailRenderer;
 
     #endregion
 
@@ -196,6 +198,9 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
+        trailRenderer = GetComponentInChildren<TrailRenderer>();
+
+        initialTrailRendererTime = trailRenderer.time;
 
         // animation hashes
         playerAttackHash = Animator.StringToHash(AnimationNames.ZugaiAttack);
@@ -271,6 +276,7 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
         IsOnGround = false;
         Velocity = new Vector2(Velocity.x, 0f);
         rigidBody.AddForce(Vector2.up * _jumpStrength, ForceMode2D.Impulse);
+        trailRenderer.time = 0f;
     }
 
     public void DoubleJump()
