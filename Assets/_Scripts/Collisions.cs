@@ -9,13 +9,11 @@ public class Collisions : MonoBehaviour
     private float ForceFromTrapBoxSpike = -800f;
 
     private Player player;
-    private MovePlayer movePlayer;
     private SpriteDivider spriteDivider;
 
     private void Start()
     {
         player = GetComponent<Player>();
-        movePlayer = GetComponent<MovePlayer>();
         spriteDivider = GetComponent<SpriteDivider>();
     }
 
@@ -25,7 +23,6 @@ public class Collisions : MonoBehaviour
         if (collision.gameObject.CompareTag(Tags.Spike))
         {
             player.AddDamage(25, Vector2.up * ForceFromSpike);
-            movePlayer.ResetJumpState();
           //  spriteDivider.Divide(Vector2.up);
         }
         else if (collision.gameObject.CompareTag(Tags.TrapBoxSpike))

@@ -8,5 +8,5 @@ public interface ISpawnPlayerInterface
 {
     bool IsSpawning { get; }
     void Spawn(Vector2 position);
-    event Action<ISpawnPlayerInterface> OnStartSpawning;
+    event Action<ISpawnPlayerInterface> OnDeathSpawn;
 }

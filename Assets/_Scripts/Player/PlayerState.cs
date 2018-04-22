@@ -18,7 +18,7 @@ using UnityEngine;
  * lvl 1     IDLE_STATE -- MOVE_STATE -- JUMP_STATE -- IS_TELEPORTING  -- DOUBLE_JUMP
  *               |             |             |               |                 |
  *               V             V             V               V                 v
- *          ATTACK_STATE  ATTACK_STATE   
+ * lvl 2     ATTACK_STATE  ATTACK_STATE   
  * 
  * 
  * **************************************************************************/
@@ -98,9 +98,8 @@ public class PlayerIdleState : PlayerState, IPlayerState
         if (jump)
             player.State.Push(new PlayerJumpState());
 
-        // TODO
-        //if (attack)
-        //    player.State.Push(new PlayerAttackState());
+        if (attack)
+            player.State.Push(new PlayerAttackState());
 
     }
 }
@@ -131,12 +130,16 @@ public class PlayerMoveState : PlayerState, IPlayerState
             player.PlayMoveAnimation(play: false);
             player.State.Push(new PlayerJumpState());
         }
+
+        if (attack)
+            player.State.Push(new PlayerAttackState());
     }
 }
 
 public class PlayerJumpState : PlayerState, IPlayerState
 {
-    private bool isInJump;
+    protected bool isInJump;
+    protected float previousFrameY;
 
     public override void Update(Player player)
     {
@@ -151,6 +154,7 @@ public class PlayerJumpState : PlayerState, IPlayerState
 
         if (player.CheckIfPlayerIsGrounded() == true)
         {
+            player.PlayFallingAnimation(play: false);
             player.PlayJumpAnimation(play: false);
             player.PlayLandingAnimation();
             player.State.Pop();
@@ -158,6 +162,10 @@ public class PlayerJumpState : PlayerState, IPlayerState
                 player.State.Push(new PlayerIdleState());
             else
                 player.State.Push(new PlayerMoveState());
+        }
+        else
+        {
+            player.PlayFallingAnimation(previousFrameY > player.Position.y);
         }
 
         if (isInJump && jumpPress)
@@ -186,6 +194,31 @@ public class PlayerTeleportingState : IPlayerState
 
     public void Update(Player player)
     {
+    }
+}
+
+public class PlayerAttackState : PlayerState, IPlayerState
+{
+    private bool hasAnimationPlayed;
+    private const float TimeToExitState = .5f;
+    private float exitTime;
+
+    public override void Update(Player player)
+    {
+        if(!hasAnimationPlayed)
+        {
+            hasAnimationPlayed = true;
+            player.PlayAttackAnimation();
+        }
+
+        Move(player);
+
+        // exit state after one second
+        exitTime += Time.deltaTime;
+        if(exitTime >= TimeToExitState)
+        {
+            player.State.Pop();
+        }
     }
 }
 

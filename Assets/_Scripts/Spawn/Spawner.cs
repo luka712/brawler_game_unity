@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
+
 /// <summary>
 /// The spawner object.
 /// </summary>
@@ -33,18 +34,19 @@ public class Spawner : MonoBehaviour
             .Select(x => x.GetComponent<ISpawnPlayerInterface>())
             .ToList();
 
-        if(_players.Count > _spawnPoints.Count)
+        if (_players.Count > _spawnPoints.Count)
         {
             throw new System.Exception("Player count exceeds spawn point count!");
         }
 
         players.ForEach(x =>
         {
-            x.OnStartSpawning += StartSpawnPlayer;
-            var spawnPoint = GetSpawnPoint();
+            x.OnDeathSpawn += DeathSpawn;
+            var spawnPoint = GetRandomSpawnPoint();
+            // search for new spawn point of one is alredy taken
             while (spawnPoints.Contains(spawnPoint))
             {
-                spawnPoint = GetSpawnPoint();
+                spawnPoint = GetRandomSpawnPoint();
             }
             SpawnPlayer(spawnPoint, x);
             gameStart = false;
@@ -59,19 +61,43 @@ public class Spawner : MonoBehaviour
     /// <summary>
     /// Gets the available spawn point.
     /// </summary>
-    private Vector2 GetSpawnPoint()
+    private Vector2 GetRandomSpawnPoint()
     {
         return _spawnPoints[Random.Range(0, _spawnPoints.Count)]
             .gameObject.transform.position.ToVector2();
     }
 
     /// <summary>
-    /// Spawns player.
+    /// Gets the best spawn position
+    /// </summary>
+    private Vector2 GetOptimizedSpawnPoint(ISpawnPlayerInterface player)
+    {
+        // Loop throught players and find distance from spawn point for each spawn point and player
+        var spawnPointCandidates = new Dictionary<GameObject, IEnumerable<float>>();
+
+        foreach (var spawnPoint in _spawnPoints)
+        {
+            spawnPointCandidates.Add(spawnPoint,
+                _players.Where(x => !x.Equals(player))
+                        .Select(x => Vector3.Distance(x.transform.position, spawnPoint.transform.position)));
+        }
+
+        // select minimum from each, and then from this select max
+        var minimumForSpawnPoints = spawnPointCandidates
+            .ToDictionary(k => k.Key, v => v.Value.Min());
+
+        return minimumForSpawnPoints
+            .First(x => x.Value == minimumForSpawnPoints.Max(y => y.Value))
+            .Key.transform.position.ToVector2();
+    }
+
+    /// <summary>
+    /// Spawns player, wait for 3 seconds before spawning.
     /// </summary>
     private IEnumerator SpawnWait(ISpawnPlayerInterface player)
     {
         yield return new WaitForSeconds(3f);
-        var spawnPoint = GetSpawnPoint();
+        var spawnPoint = GetOptimizedSpawnPoint(player);
         SpawnPlayer(spawnPoint, player);
     }
 
@@ -87,9 +113,9 @@ public class Spawner : MonoBehaviour
     /// Starts 
     /// </summary>
     /// <param name="player"></param>
-    private void StartSpawnPlayer(ISpawnPlayerInterface player)
+    private void DeathSpawn(ISpawnPlayerInterface player)
     {
-        var spawnPoint = GetSpawnPoint();
+        // wait for couple of seconds before new spawn.
         StartCoroutine(SpawnWait(player));
     }
 

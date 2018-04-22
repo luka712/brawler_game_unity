@@ -6,4 +6,5 @@
     public const string Jumping = "jumping";
     public const string Landing = "landing";
     public const string SpecialAttack = "special_attack";
+    public const string Falling = "falling";
 }

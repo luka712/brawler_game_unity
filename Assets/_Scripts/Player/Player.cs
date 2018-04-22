@@ -23,9 +23,7 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
     #region Fields
 
-    private int playerAttackHash;
     private float initalGravity;
-    private float initialTrailRendererTime;
     private DividedSprite[] dividedSprites;
     private Vector3 positionToTeleportTo;
     private ICommand pushTeleportStateCommand = new PushTeleportStateCommand();
@@ -45,13 +43,12 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     protected SpriteRenderer spriteRenderer;
     protected Rigidbody2D rigidBody;
     protected Animator animator;
-    protected TrailRenderer trailRenderer;
 
     #endregion
 
     #region Events
 
-    public event Action<ISpawnPlayerInterface> OnStartSpawning;
+    public event Action<ISpawnPlayerInterface> OnDeathSpawn;
     public event Action<Player> OnDeath;
 
     #endregion
@@ -160,7 +157,7 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
                 if (OnDeath != null)
                 {
                     spriteRenderer.color = spriteRenderer.color.SetAlpha(0f);
-                    OnStartSpawning(this);
+                    OnDeathSpawn(this);
                     OnDeath(this);
                 }
             }
@@ -198,12 +195,6 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
-        trailRenderer = GetComponentInChildren<TrailRenderer>();
-
-        initialTrailRendererTime = trailRenderer.time;
-
-        // animation hashes
-        playerAttackHash = Animator.StringToHash(AnimationNames.ZugaiAttack);
 
         Health = _playerHealth;
         spawnCounter = _playerSpawnFadeInOuts;
@@ -276,7 +267,6 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
         IsOnGround = false;
         Velocity = new Vector2(Velocity.x, 0f);
         rigidBody.AddForce(Vector2.up * _jumpStrength, ForceMode2D.Impulse);
-        trailRenderer.time = 0f;
     }
 
     public void DoubleJump()
@@ -288,6 +278,9 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
     public void PlayJumpAnimation(bool play = true, string animationName = AnimationVariables.Jumping)
         => animator.SetBool(AnimationVariables.Jumping, play);
+
+    public void PlayFallingAnimation(bool play = true)
+    => animator.SetBool(AnimationVariables.Falling, play);
 
     public void GroundCollision()
         => IsOnGround = true;
@@ -303,9 +296,6 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
     public void ActivateAttackCollider(bool value = true)
         => playerAttackCollider.enabled = value;
-
-    public bool IsAttackAnimationPlaying()
-        => animator.GetCurrentAnimatorStateInfo(0).shortNameHash == playerAttackHash;
 
     #endregion
 

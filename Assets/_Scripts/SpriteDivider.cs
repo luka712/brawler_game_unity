@@ -23,7 +23,6 @@ public class SpriteDivider : MonoBehaviour, ISpriteDivider
 
     private SpriteRenderer spriteRenderer;
     private ITeleportObjectInterface objectToTeleport;
-    private MovePlayer movePlayer;
     private List<Collider2D> playerColliders;
 
 
@@ -47,7 +46,6 @@ public class SpriteDivider : MonoBehaviour, ISpriteDivider
 
         objectToTeleport = GetComponent<ITeleportObjectInterface>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        movePlayer = GetComponent<MovePlayer>();
         playerColliders = GetComponentsInChildren<Collider2D>().ToList();
         
     }
