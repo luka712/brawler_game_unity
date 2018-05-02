@@ -4,18 +4,30 @@ using UnityEngine;
 
 public class BulletCollisions : MonoBehaviour
 {
-    // editor variables
+    #region Editor Variables
+
     public int _damage = 10;
     public float _force = 15f;
+
+    #endregion
+
+    #region Fields
 
     private Bullet bullet;
     private Rigidbody2D rigBody;
 
-    internal int Damage { get { return _damage; } }
-    internal float ForceFeedback { get { return _force; } }
+    #endregion
 
-    // Use this for initialization
-    void Start()
+    #region Properties
+
+    public int Damage { get { return _damage; } }
+    public float ForceFeedback { get { return _force; } }
+
+    #endregion
+
+    #region Unity Methods
+
+    private void Start()
     {
         bullet = GetComponent<Bullet>();
         rigBody = GetComponent<Rigidbody2D>();
@@ -41,5 +53,11 @@ public class BulletCollisions : MonoBehaviour
                 bullet.gameObject.SetActive(false);
             }
         }
+        else if(collision.gameObject.CompareTag(Tags.Ground))
+        {
+            bullet.OnWallCollision();
+        }
     }
+
+    #endregion
 }

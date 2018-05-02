@@ -1,4 +1,7 @@
-﻿using System;
+﻿
+#define DEBUG
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,6 +9,13 @@ using System.Linq;
 
 public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPlayerInterface, ISpawnPlayerInterface
 {
+#if DEBUG
+
+    public string _debugPlayerState;
+
+#endif
+
+
     #region Editor Fields
 
     public string _horizontalAxis = "Horizontal_P1";
@@ -18,6 +28,8 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     public float _spawnAnimationSpeed = 1f;
     public int _playerHealth = 3;
     public int _playerSpawnFadeInOuts = 3;
+    public int _group = 1;
+    public GameObject _dagger;
 
     #endregion
 
@@ -56,10 +68,6 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     protected int health;
 
 
-
-    // team
-    [SerializeField]
-    protected int group = 1;
 
     // events
 
@@ -204,7 +212,7 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     /// <summary>
     /// Gets player team.
     /// </summary>
-    public int Group { get { return group; } }
+    public int Group { get { return _group; } }
 
     protected virtual void Update()
     {
@@ -220,6 +228,10 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
                 Rotation = 0f;
             }
         }
+
+#if DEBUG
+        _debugPlayerState = State.Peek().ToString();
+#endif
     }
 
 
@@ -242,6 +254,14 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
 
     #region  Public player methods.
+
+    public void CreateDagger()
+    {
+        var dagger = Instantiate(_dagger).GetComponent<Dagger>();
+        dagger.Group = Group;
+        dagger.Fire(this.transform.position, 
+            this.transform.localScale.x > 0 ? Vector2.right : Vector2.left);
+    }
 
     public bool CheckIfPlayerIsGrounded()
         => Velocity.y == 0 && IsOnGround;

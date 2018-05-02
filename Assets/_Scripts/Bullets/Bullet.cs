@@ -6,16 +6,34 @@ using System.Linq;
 
 public class Bullet : MonoBehaviour
 {
+    #region Editor Variables
+
+    public float _speed = 10f;
+    public float _timeToExpire = 3f;
+    public float _fadeOutSpeed = 10f;
+
+    #endregion
+
+    #region Constants
+
+    private const float StartFadingAfter = 2f;
+
+    #endregion
+
+    #region Fields
+
     protected Rigidbody2D rigBody;
-
-    // editor variables
-    public float speed = 10f;
-    public float timeToExpire = 3f;
-
-    internal int Group { get; set; }
-
     private Animator animator;
-    internal Animator Animator
+    private SpriteRenderer spriteRenderer;
+    private bool fadeOut;
+
+    #endregion
+
+    #region Properties
+
+    public int Group { get; set; }
+
+    public Animator Animator
     {
         get
         {
@@ -27,27 +45,67 @@ public class Bullet : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Unity Methods 
+
     // Use this for initialization
-    internal virtual void Awake()
+    public virtual void Awake()
     {
         rigBody = GetComponent<Rigidbody2D>();
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+    }
+
+    protected virtual void Update()
+    {
+        if(fadeOut)
+        {
+            spriteRenderer.color = spriteRenderer.color.SetAlpha(spriteRenderer.color.a - _fadeOutSpeed * Time.deltaTime);
+        }
     }
 
     protected virtual void FixedUpdate()
     {
-        
+
     }
 
-    internal virtual void Fire(Vector2 one)
+    #endregion
+
+    #region Methods 
+
+    public virtual void Fire(Vector2 position, Vector2 direction)
     {
         this.gameObject.SetActive(true);
-        rigBody.velocity = one * speed;
+        this.transform.position = position.ToVector3();
+        var x = this.transform.localScale.x;
+        this.transform.localScale = this.transform.localScale
+            .ChangeComponentX(direction.x > 0 ? x : Mathf.Abs(x) * -Math.Abs(x));
+        rigBody.velocity = direction * _speed;
+
+        // This will make any bullet inactive after 15 seconds.
         StartCoroutine(Timer());
     }
 
-    internal virtual IEnumerator Timer()
+    public virtual IEnumerator Timer()
     {
-        yield return new WaitForSeconds(timeToExpire);
+        yield return new WaitForSeconds(_timeToExpire);
         this.gameObject.SetActive(false);
     }
+
+    public void OnWallCollision()
+    {
+        rigBody.velocity = Vector2.zero;
+        StartCoroutine(StartFadingOut());
+    }
+
+    public IEnumerator StartFadingOut()
+    {
+        yield return new WaitForSeconds(StartFadingAfter);
+        fadeOut = true;
+    } 
+
+
+    #endregion
+
+
 }

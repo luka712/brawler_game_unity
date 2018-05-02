@@ -5,7 +5,8 @@ using UnityEngine;
 /***************************************************************************
  * IDLE_STATE       -> ( MOVE_STATE, JUMP_STATE, ATTACK_STATE)  
  * MOVE_STATE       -> ( IDLE_STATE, JUMP_STATE, ATTACK_STATE)  
- * JUMP_STATE       -> ( IDLE_STATE, MOVE_STATE, DOUBLE_JUMP)              
+ * PLAYER_LANDING   -> ( IDLE_STATE, MOVE_STATE)
+ * JUMP_STATE       -> ( PLAYER_LANDING , DOUBLE_JUMP)              
  * IS_TELEPORTING   -> ( IDLE_STATE )
  * ATTACK_STATE     -> PREVIOUS 
  * DOUBLE_JUMP      -> ( IDLE_STATE, MOVE_STATE )  
@@ -15,9 +16,9 @@ using UnityEngine;
  * 
  * 
  * HIERARCHY 
- * lvl 1     IDLE_STATE -- MOVE_STATE -- JUMP_STATE -- IS_TELEPORTING  -- DOUBLE_JUMP
- *               |             |             |               |                 |
- *               V             V             V               V                 v
+ * lvl 1     IDLE_STATE -- MOVE_STATE -- JUMP_STATE -- IS_TELEPORTING  -- DOUBLE_JUMP -- PLAYER_LANDING
+ *               |             |             |               |                 |               |
+ *               V             V             V               V                 v               v
  * lvl 2     ATTACK_STATE  ATTACK_STATE   
  * 
  * 
@@ -106,7 +107,6 @@ public class PlayerIdleState : PlayerState, IPlayerState
 
 public class PlayerMoveState : PlayerState, IPlayerState
 {
-
     public override void Update(Player player)
     {
         if (direction > 0)
@@ -158,10 +158,7 @@ public class PlayerJumpState : PlayerState, IPlayerState
             player.PlayJumpAnimation(play: false);
             player.PlayLandingAnimation();
             player.State.Pop();
-            if (direction == 0)
-                player.State.Push(new PlayerIdleState());
-            else
-                player.State.Push(new PlayerMoveState());
+            player.State.Push(new PlayerLandingState());
         }
         else
         {
@@ -183,6 +180,18 @@ public class PlayerJumpState : PlayerState, IPlayerState
     }
 }
 
+public class PlayerLandingState : PlayerState, IPlayerState
+{
+    public override void Update(Player player)
+    {
+        player.State.Pop();
+        if (direction == 0)
+            player.State.Push(new PlayerIdleState());
+        else
+            player.State.Push(new PlayerMoveState());
+    }
+}
+
 public class PlayerDoubleJumpState : PlayerJumpState, IPlayerState
 {
     public override void JumpPress(Player player) { }
@@ -200,8 +209,11 @@ public class PlayerTeleportingState : IPlayerState
 public class PlayerAttackState : PlayerState, IPlayerState
 {
     private bool hasAnimationPlayed;
-    private const float TimeToExitState = .5f;
+    private bool daggerCreated;
+    private const float TimeToExitState = .3f;
+    private const float TimeToCreateDagger = .2f;
     private float exitTime;
+    private float daggerTime;
 
     public override void Update(Player player)
     {
@@ -213,7 +225,15 @@ public class PlayerAttackState : PlayerState, IPlayerState
 
         Move(player);
 
-        // exit state after one second
+        // create dagger after set time
+        daggerTime += Time.deltaTime;
+        if(daggerTime >= TimeToCreateDagger && !daggerCreated)
+        {
+            player.CreateDagger();
+            daggerCreated = true;
+        }
+
+        // exit state after set time
         exitTime += Time.deltaTime;
         if(exitTime >= TimeToExitState)
         {

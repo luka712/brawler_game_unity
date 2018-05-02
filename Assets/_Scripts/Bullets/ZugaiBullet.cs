@@ -19,7 +19,7 @@ public class ZugaiBullet : Bullet
     public bool IsExploding { get; private set; }
 
     // Use this for initialization
-    internal override void Awake()
+    public override void Awake()
     {
         base.Awake();
         boxCollider = GetComponent<BoxCollider2D>();

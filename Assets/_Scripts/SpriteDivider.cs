@@ -34,20 +34,20 @@ public class SpriteDivider : MonoBehaviour, ISpriteDivider
 
     #endregion
 
-    // Use this for initialization
-    private void Start()
+    private void Awake()
     {
         DividedSprites = new DividedSprite[(int)(_pass.x * _pass.y)];
         for (int i = 0; i < DividedSprites.Length; i++)
         {
             DividedSprites[i] = new DividedSprite(this.gameObject);
         }
+    }
 
-
+    private void Start()
+    {
         objectToTeleport = GetComponent<ITeleportObjectInterface>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         playerColliders = GetComponentsInChildren<Collider2D>().ToList();
-        
     }
 
     public void RenderDividedSprites()
