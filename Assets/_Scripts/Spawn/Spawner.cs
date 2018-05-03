@@ -106,7 +106,7 @@ public class Spawner : MonoBehaviour
     /// </summary>
     private void SpawnPlayer(Vector2 spawnPoint, ISpawnPlayerInterface player)
     {
-        player.Spawn(spawnPoint);
+        player.OnSpawn(spawnPoint);
     }
 
     /// <summary>

@@ -7,6 +7,6 @@ using UnityEngine;
 public interface ISpawnPlayerInterface
 {
     bool IsSpawning { get; }
-    void Spawn(Vector2 position);
+    void OnSpawn(Vector2 position);
     event Action<ISpawnPlayerInterface> OnDeathSpawn;
 }

@@ -17,6 +17,7 @@ public class Bullet : MonoBehaviour
     #region Constants
 
     private const float StartFadingAfter = 2f;
+    private const float ShakeMaxOffset = 25f;
 
     #endregion
 
@@ -30,6 +31,8 @@ public class Bullet : MonoBehaviour
     #endregion
 
     #region Properties
+
+    public bool Shake { get; set; }
 
     public int Group { get; set; }
 
@@ -95,6 +98,7 @@ public class Bullet : MonoBehaviour
     public void OnWallCollision()
     {
         rigBody.velocity = Vector2.zero;
+        Shake = true;
         StartCoroutine(StartFadingOut());
     }
 
@@ -103,7 +107,6 @@ public class Bullet : MonoBehaviour
         yield return new WaitForSeconds(StartFadingAfter);
         fadeOut = true;
     } 
-
 
     #endregion
 

@@ -67,11 +67,6 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
     protected int health;
 
-
-
-    // events
-
-
     #region Properties
 
     /// <summary>
@@ -206,6 +201,7 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
         Health = _playerHealth;
         spawnCounter = _playerSpawnFadeInOuts;
+        IsSpawning = true;
     }
 
 
@@ -316,6 +312,16 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
     public void ActivateAttackCollider(bool value = true)
         => playerAttackCollider.enabled = value;
+
+    public void BlowUpPlayer(Vector2 direction)
+    {
+        SpriteDivider.RenderDividedSprites();
+        foreach(var sprite in dividedSprites)
+        {
+            sprite.AddForce(direction, 0, 1);
+            Spawn
+        }
+    }
 
     #endregion
 
@@ -454,7 +460,7 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     /// <summary>
     /// Spawns the player at position.
     /// </summary>
-    public void Spawn(Vector2 position)
+    public void OnSpawn(Vector2 position)
     {
         this.transform.position = position.ToVector3(this.transform.position.z);
         Health = _playerHealth;
@@ -483,7 +489,7 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     /// </summary>
     private void SpawnPlayer()
     {
-        if (spawnCounter > 0)
+        if (spawnCounter > 0 && IsSpawning)
         {
             var alpha = spriteRenderer.color.a;
             if (goingUp)
