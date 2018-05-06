@@ -121,6 +121,16 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     }
 
     /// <summary>
+    /// Gets or sets alpha color.
+    /// </summary>
+    public float Alpha
+    {
+        get { return spriteRenderer.color.a; }
+        set { this.spriteRenderer.color = this.spriteRenderer.color.SetAlpha(value); }
+    }
+
+
+    /// <summary>
     /// Current teleport state.
     /// </summary>
     public TeleportState TeleportState { get; set; }
@@ -315,11 +325,22 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
     public void BlowUpPlayer(Vector2 direction)
     {
-        SpriteDivider.RenderDividedSprites();
-        foreach(var sprite in dividedSprites)
+        if (!IsSpawning)
         {
-            sprite.AddForce(direction, 0, 1);
-            Spawn
+            SpriteDivider.RenderDividedSprites();
+            foreach (var sprite in dividedSprites)
+            {
+                sprite.AddForce(direction, 0, 10);
+            }
+            if (OnDeathSpawn != null)
+            {
+                OnDeathSpawn.Invoke(this);
+            }
+            Alpha = 0f;
+        }
+        else
+        {
+            rigidBody.AddForce(Vector2.up * 5);
         }
     }
 

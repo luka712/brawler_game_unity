@@ -5,11 +5,13 @@ public enum State { None, DeathAnimation, TeleportAnimation }
 
 public class DividedSprite
 {
-    [SerializeField]
-    private string layer = "DividedSprites";
+    #region Editor Variables
 
-    [SerializeField]
-    private string sortingLayer = "Foreground";
+    public string _layer = "DividedSprites";
+    public string _sortingLayer = "BeforeForeground";
+    public int _orderInLayer = 1;
+
+    #endregion
 
     private GameObject _this;
     private GameObject parent;
@@ -49,7 +51,7 @@ public class DividedSprite
         coll = _this.AddComponent<BoxCollider2D>();
         rigidBody = _this.AddComponent<Rigidbody2D>();
         rigidBody.gravityScale = Gravity;
-        rigidBody.gameObject.layer = LayerMask.NameToLayer(layer);
+        rigidBody.gameObject.layer = LayerMask.NameToLayer(_layer);
     }
 
     // Update is called once per frame
@@ -107,7 +109,8 @@ public class DividedSprite
         rend.sprite = Sprite.Create(parentRenderer.sprite.texture, sourceRect, Vector2.zero, pixelsPerUnit);
 
         rend.color = parentRenderer.color;
-        rend.sortingLayerName = sortingLayer;
+        rend.sortingLayerName = _sortingLayer;
+        rend.sortingOrder = _orderInLayer;
 
         var parentPosition = parentRenderer.gameObject.transform.position;
         _this.transform.position =

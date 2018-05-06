@@ -66,6 +66,7 @@ public class SpriteDivider : MonoBehaviour, ISpriteDivider
                 float xPos = -(xPass * _pass.x * .5f) + x;
                 float yPos = -(yPass * _pass.y * .5f) + y;
                 dividedSprite.CreateSprite(this.spriteRenderer, new Rect(x, y, xPass, yPass), new Vector2(xPos, yPos));
+                this.spriteRenderer.color = this.spriteRenderer.color.SetAlpha(1);
             }
         }
     }
