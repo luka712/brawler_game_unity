@@ -36,6 +36,9 @@ public class Bullet : MonoBehaviour
 
     public int Group { get; set; }
 
+    public bool ReadyForReuse
+        => spriteRenderer.color.a <= 0f;
+
     public Animator Animator
     {
         get

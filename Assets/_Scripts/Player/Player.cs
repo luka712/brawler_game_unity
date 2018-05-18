@@ -33,10 +33,19 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
     #endregion
 
+    #region Constants
+
+    public string TeleportSpriteDividerTag = "TeleportSpriteDivider";
+    public string DeathSpriteDividerTag = "DeathSpriteDivider";
+
+    #endregion
+
     #region Fields
 
     private float initalGravity;
-    private DividedSprite[] dividedSprites;
+    private DividedSprite[] teleportDividedSprites;
+    private DividedSprite[] deathDividedSprites;
+    private List<Dagger> daggers = new List<Dagger>();
     private Vector3 positionToTeleportTo;
     private ICommand pushTeleportStateCommand = new PushTeleportStateCommand();
     private ICommand popTeleportStateCommand = new PopTeleportStateCommand();
@@ -143,7 +152,12 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     /// <summary>
     /// The sprite divider interface.
     /// </summary>
-    public ISpriteDivider SpriteDivider { get; private set; }
+    public ISpriteDivider TeleportSpriteDivider { get; private set; }
+
+    /// <summary>
+    /// The death sprite divider.
+    /// </summary>
+    public ISpriteDivider DeathSpriteDivider { get; private set; }
 
     /// <summary>
     /// Is player sticked to parent. Used for wall running.
@@ -188,8 +202,11 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
             AttackButton = _attackButton,
             SpecialAttackButton = _specialAttackButton
         };
-        SpriteDivider = GetComponent<ISpriteDivider>();
-        dividedSprites = SpriteDivider.DividedSprites;
+        var spriteDividers = GetComponentsInChildren<ISpriteDivider>();
+        TeleportSpriteDivider = spriteDividers.FirstOrDefault(x => x.TagName.Equals(TeleportSpriteDividerTag));
+        DeathSpriteDivider = spriteDividers.FirstOrDefault(x => x.TagName.Equals(DeathSpriteDividerTag));
+        teleportDividedSprites = TeleportSpriteDivider.DividedSprites;
+        deathDividedSprites = DeathSpriteDivider.DividedSprites;
 
         /* get colliders
          * attack collider should be active, only if attacking
@@ -223,7 +240,8 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     protected virtual void Update()
     {
 
-        UpdateDividedSprites();
+        UpdateTeleportDividedSprites();
+        UpdateDeathDividerSprites();
         SpawnPlayer();
 
         if (Rotation != 0)
@@ -263,9 +281,14 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
 
     public void CreateDagger()
     {
-        var dagger = Instantiate(_dagger).GetComponent<Dagger>();
+        var dagger = daggers.FirstOrDefault(x => x.ReadyForReuse);
+        if (dagger == null)
+        {
+            dagger = Instantiate(_dagger).GetComponent<Dagger>();
+            daggers.Add(dagger);
+        }
         dagger.Group = Group;
-        dagger.Fire(this.transform.position, 
+        dagger.Fire(this.transform.position,
             this.transform.localScale.x > 0 ? Vector2.right : Vector2.left);
     }
 
@@ -306,7 +329,7 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
         => animator.SetBool(AnimationVariables.Jumping, play);
 
     public void PlayFallingAnimation(bool play = true)
-    => animator.SetBool(AnimationVariables.Falling, play);
+        => animator.SetBool(AnimationVariables.Falling, play);
 
     public void GroundCollision()
         => IsOnGround = true;
@@ -323,14 +346,14 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     public void ActivateAttackCollider(bool value = true)
         => playerAttackCollider.enabled = value;
 
-    public void BlowUpPlayer(Vector2 direction)
+    public void BlowUpPlayer(Vector2 direction, float minForce, float maxForce)
     {
         if (!IsSpawning)
         {
-            SpriteDivider.RenderDividedSprites();
-            foreach (var sprite in dividedSprites)
+            DeathSpriteDivider.RenderDividedSprites();
+            foreach (var sprite in deathDividedSprites)
             {
-                sprite.AddForce(direction, 0, 10);
+                sprite.DeathAnimation(direction, minForce, maxForce);
             }
             if (OnDeathSpawn != null)
             {
@@ -357,14 +380,14 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
         {
             positionToTeleportTo = destination;
             TeleportState = TeleportState.IsTeleporting;
-            SpriteDivider.RenderDividedSprites();
+            TeleportSpriteDivider.RenderDividedSprites();
             EnableColliders(false);
             HidePlayer();
             pushTeleportStateCommand.Execute(this);
 
-            for (int i = 0; i < dividedSprites.Length; i++)
+            for (int i = 0; i < teleportDividedSprites.Length; i++)
             {
-                dividedSprites[i].Teleport(positionToTeleportTo.ToVector2() + dividedSprites[i].Position - Position.ToVector2(), .5f);
+                teleportDividedSprites[i].Teleport(positionToTeleportTo.ToVector2() + teleportDividedSprites[i].Position - Position.ToVector2(), .5f);
             }
         }
     }
@@ -402,18 +425,18 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
     /// <summary>
     /// Updates divided sprites.
     /// </summary>
-    private void UpdateDividedSprites()
+    private void UpdateTeleportDividedSprites()
     {
         if (TeleportState == TeleportState.Able) return;
 
         bool isInTeleportState = false;
 
-        for (int i = 0; i < dividedSprites.Length; i++)
+        for (int i = 0; i < teleportDividedSprites.Length; i++)
         {
-            dividedSprites[i].Update(Time.deltaTime);
+            teleportDividedSprites[i].Update(Time.deltaTime);
 
             // check for teleporting sprites 
-            isInTeleportState = dividedSprites[i].State == global::State.TeleportAnimation;
+            isInTeleportState = teleportDividedSprites[i].State == global::State.TeleportAnimation;
         }
 
         if (TeleportState == TeleportState.IsTeleporting)
@@ -425,12 +448,20 @@ public abstract class Player : MonoBehaviour, ITeleportObjectInterface, IStickPl
             }
 
             // Expire
-            for (int i = 0; i < dividedSprites.Length; i++)
+            for (int i = 0; i < teleportDividedSprites.Length; i++)
             {
-                dividedSprites[i].Active(false);
+                teleportDividedSprites[i].Active(false);
             }
 
             StopTeleporting();
+        }
+    }
+
+    private void UpdateDeathDividerSprites()
+    {
+        for (int i = 0; i < teleportDividedSprites.Length; i++)
+        {
+            deathDividedSprites[i].Update(Time.deltaTime);
         }
     }
 

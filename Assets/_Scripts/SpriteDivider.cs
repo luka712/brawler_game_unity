@@ -5,6 +5,7 @@ using System.Linq;
 
 public interface ISpriteDivider
 {
+    string TagName { get; }
     DividedSprite[] DividedSprites { get; }
     void RenderDividedSprites();
 }
@@ -32,6 +33,9 @@ public class SpriteDivider : MonoBehaviour, ISpriteDivider
 
     public DividedSprite[] DividedSprites { get; private set; }
 
+    public string TagName
+        => gameObject.tag;
+
     #endregion
 
     private void Awake()
@@ -46,8 +50,8 @@ public class SpriteDivider : MonoBehaviour, ISpriteDivider
     private void Start()
     {
         objectToTeleport = GetComponent<ITeleportObjectInterface>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        playerColliders = GetComponentsInChildren<Collider2D>().ToList();
+        spriteRenderer = GetComponentInParent<SpriteRenderer>();
+        playerColliders =  GetComponentsInChildren<Collider2D>().ToList();
     }
 
     public void RenderDividedSprites()

@@ -130,7 +130,7 @@ public class DividedSprite
         AddForce(direction, minForce, maxForce);
     }
 
-    public virtual void AddForce(Vector2 direction, float minForce, float maxForce)
+    protected virtual void AddForce(Vector2 direction, float minForce, float maxForce)
     {
         rigidBody.AddForce(new Vector2(direction.x * Random.Range(minForce, maxForce),
             direction.y * Random.Range(minForce, maxForce)) * ForceMultiplier);
